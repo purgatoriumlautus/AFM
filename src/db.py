@@ -2,10 +2,10 @@ from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 
 
-db = SQLAlchemy()
+db = SQLAlchemy() #create db
 
 
-class User(db.Model):
+class User(db.Model): #db table for users should be modified in future
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(60),nullable=False)
     surname = db.Column(db.String(60),nullable=False)
