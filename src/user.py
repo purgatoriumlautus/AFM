@@ -5,29 +5,31 @@ import validators
 from src.db import User,db
 from flask_jwt_extended import jwt_required,create_access_token,create_refresh_token,get_jwt_identity
 
+#class User: Should be created?
 user = Blueprint("user",__name__,url_prefix="/user")  #create user blueprint
 
+# THIS IS DATABASE QUERRY that needs to be implemented in the future
 
 @user.post('/register') #set the post method for /register route
 def register_user(): #register function
     #retrieve all the neccecary data from the post requst
-    name = request.json['name'] 
+    name = request.json['name']
     surname = request.json['surname']
     email = request.json['email']
     password = request.json['password']
-    
-    #few short cheks, should be replaced by more advanced in the future 
+
+    #few short cheks, should be replaced by more advanced in the future
     if len(password)<8:
-        return jsonify({"error":"password is too short"}),HTTP_400_BAD_REQUEST 
+        return jsonify({"error":"password is too short"}),HTTP_400_BAD_REQUEST
 
     #implement other constraints directly on the page using JS
 
     if not validators.email(email):
-        return jsonify({"error":"email is not valid"}),HTTP_400_BAD_REQUEST 
+        return jsonify({"error":"email is not valid"}),HTTP_400_BAD_REQUEST
 
     #query for checking if a user with the same email exists
     if User.query.filter_by(email=email).first() is not None:
-        return jsonify({"error":"email is taken"}),HTTP_409_CONFLICT 
+        return jsonify({"error":"email is taken"}),HTTP_409_CONFLICT
 
 
     #encrypt the password
@@ -36,8 +38,8 @@ def register_user(): #register function
     user=User(name=name,surname=surname,password=pwd_hash,email=email)
     #add the user to db
     db.session.add(user)
-    db.session.commit()   
-    
+    db.session.commit()
+
     #return success message
     return jsonify({
         'message':'user created',
@@ -50,17 +52,14 @@ def register_user(): #register function
     }),HTTP_201_CREATED
 
 
-
-
-
-#login 
+#login
 @user.post("/login")
 def login_user():
 
     #retrieve the data from user's request
     email = request.json.get('email','')
     password = request.json.get('password','')
-    
+
     #query to get the user by the email
     user = User.query.filter_by(email=email).first()
 
@@ -72,10 +71,10 @@ def login_user():
         if is_pass_correct:
             #create jwt refresh token used for (refreshing an access token)
             refresh = create_refresh_token(identity=user.id) #set the identity to user_id so it can be retrieved later on
-            
+
             #create jwt access token (used for authentification)
             access = create_access_token(identity=user.id) #set the identity to user_id so it can be retrieved later on
-            
+
             return jsonify({
                 'user':{
                     'refresh':refresh,
@@ -96,7 +95,7 @@ def show_profile():
 
     user_id = get_jwt_identity() #returns user_id as we set above
     user = User.query.filter_by(id=user_id).first() #query to get the user by id
-    return jsonify({'user': 
+    return jsonify({'user':
                     {
                         'name':user.name,
                         'surname':user.surname,
