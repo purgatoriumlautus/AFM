@@ -1,6 +1,6 @@
 from flask import Blueprint,request,jsonify
 from werkzeug.security import check_password_hash,generate_password_hash
-from .constants.http_status_codes import HTTP_400_BAD_REQUEST,HTTP_409_CONFLICT,HTTP_201_CREATED,HTTP_401_UNAUTHORIZED,HTTP_404_NOT_FOUND,HTTP_200_OK #STATUS CODES FOR RETURNING TO THE USERS, CHECK constants
+from src.constants.http_status_codes import HTTP_400_BAD_REQUEST,HTTP_409_CONFLICT,HTTP_201_CREATED,HTTP_401_UNAUTHORIZED,HTTP_404_NOT_FOUND,HTTP_200_OK #STATUS CODES FOR RETURNING TO THE USERS, CHECK constants
 import validators
 from src.db import User,db
 from flask_jwt_extended import jwt_required,create_access_token,create_refresh_token,get_jwt_identity
