@@ -1,7 +1,7 @@
 import requests
 from flask import Flask, render_template, jsonify
 # from user import users
-from user import user
+from src.userAPI import user
 
 app = Flask(__name__)
 

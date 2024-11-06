@@ -5,6 +5,8 @@ import validators
 from src.db import User,db
 from flask_jwt_extended import jwt_required,create_access_token,create_refresh_token,get_jwt_identity
 
+# class User:
+
 #class User: Should be created?
 user = Blueprint("user",__name__,url_prefix="/user")  #create user blueprint
 

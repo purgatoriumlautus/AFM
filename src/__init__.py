@@ -1,6 +1,6 @@
 from flask import Flask
 import os
-from src.user import user
+from src.userAPI import user
 from src.db import db
 from flask_jwt_extended import JWTManager
 
