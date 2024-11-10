@@ -1,13 +1,18 @@
 import requests
 from flask import Flask, render_template, jsonify, url_for, make_response, request, session
 from flask_login import UserMixin
-from src import create_app
+# from src import create_app
 from src.userAPI import user, register_user, login_user
-import jwt
+from flask_sqlalchemy import SQLAlchemy
+from flask_login import UserMixin
 
-app = create_app()
+app = Flask(__name__)
 
-# this breaks stuff because blueprint is already initialised in __init__.py
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
+app.config['SECRET_KEY'] ="secretkey"
+db = SQLAlchemy(app)
+
+
 # app.register_blueprint(user)
 
 @app.route('/')
