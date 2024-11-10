@@ -1,6 +1,7 @@
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
-
+# from src.app import app
+# from flask_login import UserMixin
 
 db = SQLAlchemy() #create db
 
