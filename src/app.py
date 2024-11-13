@@ -1,41 +1,39 @@
-import requests
-from flask import Flask, render_template, jsonify, url_for, make_response, request, session
-from flask_login import UserMixin
-# from src import create_app
-from src.userAPI import user, register_user, login_user
+from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
-from flask_login import UserMixin
-
-app = Flask(__name__)
-
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
-app.config['SECRET_KEY'] ="secretkey"
-db = SQLAlchemy(app)
-
-
+from flask_migrate import Migrate
+from flask_login import LoginManager
+from flask_bcrypt import Bcrypt
+# from src.routes import register_routes
 # app.register_blueprint(user)
+db = SQLAlchemy()
 
-@app.route('/')
-def main():
-    if not session.get('logged_in'):
-        #TODO This should display "sign in" button in navbar if not logged in
-        return render_template('mainpage.html')
-    else:
-        #TODO This should display "sign out" button in navbar if logged in
-        return render_template('mainpage.html')
+def create_app():
+    app = Flask(__name__, template_folder='templates')
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
+    app.secret_key = "secret"
+    # initialize db
+    db.init_app(app)
 
-    # return render_template('mainpage.html')
-@app.route('/users')
-def get_users():
-    return render_template('users.html')
-@app.route('/login')
-def login():
-    return render_template('login.html')
+    migrate = Migrate(app, db)
+
+    # login manager
+    login_manager = LoginManager()
+    login_manager.init_app(app)
+
+    from src.models import User
 
 
-@app.route("/register")
-def register():
-    return render_template('register.html')
+    @login_manager.user_loader
+    def load_user(user_id):
+        return User.query.get(user_id)
 
-if __name__ == '__main__':
-    app.run(debug=True)
+    bcrypt = Bcrypt(app)
+
+    from src.routes import register_routes
+    register_routes(app, db, bcrypt)
+
+    return app
+
+
+
+
