@@ -23,13 +23,17 @@ def register_routes(app,db,bcrypt):
         return render_template('users.html')
 
     @app.route('/login')
-    def login():
+    def show_login():
         return render_template('login.html')
 
-    @app.route('/login/<user_id>', methods=['POST'])
-    def login_user(user_id):
-        login_user(user_id)
-        return "Success"
+    @app.route('/login/<user_id>')
+    def login(user_id):
+        user = User.query.get(user_id)
+        if user:
+            login_user(user)
+            return "Success"
+        else:
+            return "User not found"
     @app.route('/logout')
     def logout():
         logout_user()

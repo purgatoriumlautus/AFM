@@ -1,4 +1,4 @@
-FLASK_APP=src.app.py
+FLASK_APP=src
 FLASK_ENV=development
-SQLALCHEMY_DB_URI = sqlite:///afm.db
+SQLALCHEMY_DB_URI = sqlite:///database.db
 JWT_SECRET_KEY = 'JWT_SECRET_KEY'

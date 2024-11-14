@@ -1,19 +1,21 @@
+import os
 from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_login import LoginManager
 from flask_bcrypt import Bcrypt
-# from src.routes import register_routes
-# app.register_blueprint(user)
-db = SQLAlchemy()
+from src.db import db  # Import db from db.py
 
 def create_app():
     app = Flask(__name__, template_folder='templates')
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
+
+    # Construct the absolute path for the database file
+    instance_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', 'instance')
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(instance_path, 'database.db')
+
     app.secret_key = "secret"
+
     # initialize db
     db.init_app(app)
-
     migrate = Migrate(app, db)
 
     # login manager
@@ -22,10 +24,9 @@ def create_app():
 
     from src.models import User
 
-
     @login_manager.user_loader
     def load_user(user_id):
-        return User.query.get(user_id)
+        return User.query.get(int(user_id))
 
     bcrypt = Bcrypt(app)
 
@@ -33,7 +34,3 @@ def create_app():
     register_routes(app, db, bcrypt)
 
     return app
-
-
-
-
