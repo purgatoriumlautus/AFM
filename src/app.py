@@ -12,6 +12,7 @@ def create_app():
     instance_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', 'instance')
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(instance_path, 'database.db')
 
+    # should be changed to something more secure
     app.secret_key = "secret"
 
     # initialize db
@@ -28,6 +29,7 @@ def create_app():
     def load_user(user_id):
         return User.query.get(int(user_id))
 
+    # add bcrypt to the app (used for hashing passwords)
     bcrypt = Bcrypt(app)
 
     from src.routes import register_routes

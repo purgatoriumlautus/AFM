@@ -3,9 +3,7 @@ from src.models import User
 from flask_login import login_user, current_user, logout_user
 
 
-# REGISTER ROUTES
-
-
+# REGISTER ROUTES/ENDPOINTS FOR THE URL
 
 def register_routes(app,db,bcrypt):
     # REGISTER ROUTES
@@ -16,13 +14,6 @@ def register_routes(app,db,bcrypt):
             return render_template('mainpage.html')
         else:
             return render_template('mainpage.html')
-
-    #     if not session.get('logged_in'):
-    #         # TODO This should display "sign in" button in navbar if not logged in
-    #         return render_template('mainpage.html')
-    #     else:
-    #         # TODO This should display "sign out" button in navbar if logged in
-    #         return render_template('mainpage.html')
 
 
     @app.route('/users')

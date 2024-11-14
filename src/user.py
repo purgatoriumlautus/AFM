@@ -1,6 +1,7 @@
 from flask_login import UserMixin
 from src.db import db  # Import db from db.py
 
+# User class
 class User(db.Model, UserMixin):
     __tablename__ = 'users'
     uid = db.Column(db.Integer, primary_key=True)
@@ -10,6 +11,7 @@ class User(db.Model, UserMixin):
 
     def __repr__(self):
         return f'<User {self.username}>'
+    # get_id method to get the user id
     def get_id(self):
         return self.uid
 
