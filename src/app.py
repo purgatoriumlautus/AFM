@@ -10,7 +10,13 @@ def create_app():
 
     # Construct the absolute path for the database file
     instance_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', 'instance')
+    
+    # Create the instance folder if it doesn't exist
+    if not os.path.exists(instance_path):
+        os.makedirs(instance_path)
+
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(instance_path, 'database.db')
+
 
     # should be changed to something more secure
     app.secret_key = "secret"
