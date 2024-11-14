@@ -14,6 +14,17 @@ class User(db.Model, UserMixin):
     def get_id(self):
         return self.uid
 
+
+class Report(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    location = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.String(300), nullable=False)
+    photo_file = db.Column(db.String(100), nullable=True)
+    def __init__(self, location, description, photo_file = None):
+        self.location = location
+        self.description = description
+        self.photo_file = photo_file
+
     # def __init__(self, name, surname, email, password, phone, location = None):
     #     self.name = name
     #     self.surname = surname
