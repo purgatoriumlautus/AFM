@@ -3,7 +3,7 @@
 
 The Austrian Flood Monitoring (AFM) system is a web-based platform that aims to support emergency response organisations in their work. The platform provides ways to monitor, organise and coordinate the response to flood-related incidents. AFM offers an interactive map of current, along with historical water level information. Additionally, AFM provides registered users with an interface for submitting detailed emergency reports that enhance the response actions of emergency services. 
 
-##TO RUN THE SERVER YOU NEED TO HAVE DOCKER INSTALLED ON YOUR LOCAL MACHINE
+## TO RUN THE SERVER YOU NEED TO HAVE DOCKER INSTALLED ON YOUR LOCAL MACHINE
 ## Run Locally
 
 Clone the project
@@ -34,8 +34,7 @@ Initialize the compose
 After this the container for the server, db and db adminer has already started.
 But the DB is not populated. To populate the db run the src/imitialize_db.py script
 
-Steps:
-
+## Steps:
 Get into application container bash
 ```bash
   docker compose run app bash
@@ -53,11 +52,10 @@ exit
 
 Now the server and db is set up.
 
+## http://localhost:5000 - server
+## http://localhost:8080 - db adminer
 
-http://localhost:5000 - server
-http://localhost:8080 - db adminer
-
-to log in into db adminer use
+To log in into db adminer use
 ```bash
 server:db
 username: user
