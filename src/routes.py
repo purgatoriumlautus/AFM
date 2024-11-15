@@ -4,15 +4,14 @@ from flask_login import login_user, current_user, logout_user
 from src.db import db
 import os
 from flask import  render_template,  url_for,  request, session, redirect
-# from src import create_app
 from src.models import User, Report
 from werkzeug.utils import secure_filename
 from flask_bcrypt import bcrypt
+
 # REGISTER ROUTES/ENDPOINTS FOR THE URL
 
 def register_routes(app,db,bcrypt):
     # REGISTER ROUTES
-
     @app.route('/', methods=['GET', 'POST'])
     def mainpage():
         if current_user.is_authenticated:
@@ -34,9 +33,8 @@ def register_routes(app,db,bcrypt):
         elif request.method == 'POST':
             username = request.form['username']
             password = request.form['password']
-
-
             user = User.query.filter(User.username==username).first()
+            
             if bcrypt.check_password_hash(user.password, password):
                 login_user(user)
                 print('log')
@@ -61,11 +59,12 @@ def register_routes(app,db,bcrypt):
             password = request.form['password']
             email = request.form['email']
 
-            hashed_password = bcrypt.generate_password_hash(password)
+            hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
 
             user = User(username=username, password=hashed_password, email=email)
             db.session.add(user)
             db.session.commit()
+            login_user(user)
             return redirect(url_for('mainpage'))
 
     
@@ -75,7 +74,6 @@ def register_routes(app,db,bcrypt):
     
 
     
-
 
     @app.route('/create-report', methods = ['GET','POST'] )
     def create_report():
@@ -97,7 +95,6 @@ def register_routes(app,db,bcrypt):
         db.session.commit()
         return redirect(url_for('mainpage'))
     
-
 
     @app.route('/view-reports')
     def view_reports():
