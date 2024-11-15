@@ -38,6 +38,7 @@ def initiate_db(app):
             User(username='user10', password=bcrypt.generate_password_hash('1234').decode('utf-8'), email='user10@example.com'),
         ]
 
+
         # Add reports
         reports = [
             Report(location='45 56', description='Scary', photo_file='photo1.jpg'),
