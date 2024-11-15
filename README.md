@@ -24,9 +24,8 @@ Create docker image and container
 ```
 
 Initialize the compose
-```bash
+
 -d tag unlinks the output of the containers consoles, if you want to see them remove the -d tag 
-```
 ```bash
   docker compose up -d
 ```
