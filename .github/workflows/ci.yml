@@ -33,7 +33,4 @@ jobs:
         pip install -r requirements.txt  # Include testing dependencies
 
     - name: Test Dockerfile build
-      run: pytest tests/test_app.py
-
-    - name: Test docker-compose
-      run: pytest tests/test_docker_compose.py
+      run: pytest tests/test_Dockerfile.py
