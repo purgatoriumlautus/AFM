@@ -1,0 +1,39 @@
+name: Docker and Pytest CI
+
+on:
+  push:
+    branches:
+      - main  # Run on push to the main branch
+      - Github-Actions  # Run on push to the Github-Actions branch
+  pull_request:
+    branches:
+      - main  # Run on pull requests to the main branch
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      docker:
+        image: docker:20.10.16
+        options: --privileged
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.10
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r dev-requirements.txt  # Include testing dependencies
+
+    - name: Test Dockerfile build
+      run: pytest tests/test_app.py
+
+    - name: Test docker-compose
+      run: pytest tests/test_docker_compose.py
