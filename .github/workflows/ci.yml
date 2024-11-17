@@ -35,3 +35,6 @@ jobs:
   
     - name: Test Dockerfile build
       run: pytest tests/test_Dockerfile.py
+
+    - name: Test Docker containers
+      run: pytest tests/test_DockerContainers.py
