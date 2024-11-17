@@ -36,5 +36,10 @@ jobs:
     - name: Test Dockerfile build
       run: pytest tests/test_Dockerfile.py
 
-    - name: Test Docker containers
+    - name: Install Docker Compose
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y docker-compose
+
+    - name: Run Docker container tests
       run: pytest tests/test_DockerContainers.py
