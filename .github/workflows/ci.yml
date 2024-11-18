@@ -1,4 +1,4 @@
-name: Docker and Pytest CI
+name: Docker containers and Dockerfile tests
 
 on:
   push:
@@ -8,6 +8,7 @@ on:
   pull_request:
     branches:
       - main  # Run on pull requests to the main branch
+      - Github-Actions  # Run on push to the Github-Actions branch
 
 jobs:
   test:
@@ -32,14 +33,15 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt  # Include testing dependencies
         pip install docker  # Ensure the docker library is installed
-  
-    - name: Test Dockerfile build
-      run: pytest tests/test_Dockerfile.py
+
 
     - name: Install Docker Compose
       run: |
         sudo apt-get update
         sudo apt-get install -y docker-compose
+  
+    - name: Test Dockerfile build
+      run: pytest tests/test_Dockerfile.py
 
-    - name: Run Docker container tests
+    - name: Test Docker containers
       run: pytest tests/test_DockerContainers.py
