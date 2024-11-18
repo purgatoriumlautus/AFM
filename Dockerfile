@@ -7,7 +7,7 @@ WORKDIR /afm
 
 COPY ./requirements.txt requirements.txt
 
-RUN pip insall -r requirements.txt
+RUN pip install -r requirements.txt
 ENV FLASK_APP=src.app.py
 
 COPY . .
