@@ -13,7 +13,7 @@ services:
 
 
   db: #another container for postgres db
-    image: posgres
+    image: postgres
     environment: 
       POSTGGRES_DB: postgres
       POSTGRES_USER: user
