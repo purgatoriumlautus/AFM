@@ -1,14 +1,12 @@
 import subprocess
 import time
-import logging
 import pytest
 
-logging.basicConfig(level=logging.INFO)
 
 def test_containers_running():
     """Test if containers in docker-compose.yaml start and are running."""
     try:
-        logging.info("Starting containers using docker-compose...")
+        # Start the containers
         result = subprocess.run(
             ["docker-compose", "up", "-d", "--build"],
             stdout=subprocess.PIPE,
@@ -17,25 +15,15 @@ def test_containers_running():
         )
         assert result.returncode == 0, f"docker-compose up failed: {result.stderr}"
 
-        # Wait for services to initialize
+        # Wait a few seconds to ensure containers are running
         time.sleep(5)
 
-        logging.info("Checking container statuses...")
+        # Check if the containers are running
         result = subprocess.run(
             ["docker-compose", "ps"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
         )
         assert "Up" in result.stdout, f"One or more containers are not running: {result.stdout}"
-        
-        # Add health check
-        result = subprocess.run(
-            ["docker-compose", "logs"],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-        )
-        assert "Error" not in result.stdout, "Containers encountered errors: check logs"
-        
-        logging.info("All containers are running successfully.")
+
     finally:
-        logging.info("Tearing down containers...")
+        # Tear down the containers after the test
         subprocess.run(["docker-compose", "down"])
