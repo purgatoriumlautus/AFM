@@ -82,7 +82,7 @@
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
           (position) => {
-            locationField.value = `${position.coords.latitude}, ${position.coords.longitude}`;
+            locationField.value = `${position.coords.latitude},${position.coords.longitude}`;
             locationField.readOnly = true;
           },
           (error) => showError(error)

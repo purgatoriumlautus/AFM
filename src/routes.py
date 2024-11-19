@@ -16,9 +16,14 @@ def register_routes(app,db,bcrypt):
     def mainpage():
         if current_user.is_authenticated:
             # IF USER IS LOGGED IN
-            return render_template('mainpage.html')
+            reports = Report.all_reports()
+
+            return render_template('mainpage.html', reports=reports)
         else:
-            return render_template('mainpage.html')
+            reports = Report.all_reports()
+
+        return render_template('mainpage.html', reports=reports)
+
 
 
     @app.route('/users')

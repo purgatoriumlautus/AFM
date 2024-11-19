@@ -26,6 +26,9 @@ class Report(db.Model):
         self.location = location
         self.description = description
         self.photo_file = photo_file
+    @staticmethod
+    def all_reports():
+        return Report.query.all()
 
     # def __init__(self, name, surname, email, password, phone, location = None):
     #     self.name = name

@@ -41,17 +41,16 @@ def initiate_db(app):
 
         # Add reports
         reports = [
-            Report(location='45 56', description='Scary', photo_file='photo1.jpg'),
-            Report(location='46 57', description='crazy', photo_file='photo2.jpg'),
-            Report(location='23 24', description='holy shit', photo_file='photo3.jpg'),
-            Report(location='55 23', description='OMG', photo_file='photo4.jpg'),
-            Report(location='40 12', description='WOW', photo_file='photo5.jpg'),
-            Report(location='10 15', description='I WANT TO  ', photo_file='pic1.jpg'),
-            Report(location='69 545', description='NO WAY', photo_file='photo7.jpg'),
-            Report(location='-4 15', description='IMPOSSIBLE', photo_file='photo8.jpg'),
-            Report(location='-40 -24', description="I can believe my eyes", photo_file='photo9.jpg'),
+            Report(location='48.2082,16.3738', description='Scary', photo_file='photo1.jpg'),
+            Report(location='47.8095,13.0550', description='Crazy', photo_file='photo2.jpg'),
+            Report(location='47.2692,11.4041', description='Holy shit', photo_file='photo3.jpg'),
+            Report(location='47.2260,13.3341', description='OMG', photo_file='photo4.jpg'),
+            Report(location='47.2228,13.2950', description='WOW', photo_file='photo5.jpg'),
+            Report(location='47.3660,13.4560', description='I want to', photo_file='pic1.jpg'),
+            Report(location='47.2100,13.3750', description='No way', photo_file='photo7.jpg'),
+            Report(location='47.1600,13.4500', description='Impossible', photo_file='photo8.jpg'),
+            Report(location='47.2200,13.4000', description='I can\'t believe my eyes', photo_file='photo9.jpg'),
         ]
-
         # Insert data into the database
         db.session.bulk_save_objects(users)
         db.session.bulk_save_objects(reports)
