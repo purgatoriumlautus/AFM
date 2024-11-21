@@ -28,6 +28,10 @@ class User(db.Model, UserMixin):
     def get_id(self):
         return self.uid
 
+    @staticmethod
+    def all_users():
+        return User.query.all()
+
 
 
 class Agent(db.Model):

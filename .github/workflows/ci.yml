@@ -6,11 +6,13 @@ on:
       - main  # Run on push to the main branch
       - Github-Actions  # Run on push to the Github-Actions branch
       - reports_on_map
+      - dev
   pull_request:
     branches:
       - main  # Run on pull requests to the main branch
       - Github-Actions  # Run on push to the Github-Actions branch
       - reports_on_map
+      - dev
 
 jobs:
   test:

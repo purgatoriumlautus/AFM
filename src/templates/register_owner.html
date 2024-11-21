@@ -9,7 +9,7 @@
         {% if alert_message %}
             alert("{{ alert_message }}");
              {% if redirect_to %}
-                window.location.href = "{{ url_for('auth.register')}}";
+                window.location.href = "{{ url_for('auth.login')}}";
             {% endif %}
         {% endif %}
     </script>
@@ -43,10 +43,9 @@
     </ul>
   </div>
 </nav>
-
-    <div  class="container-fluid" style="padding-right: 20%; padding-left: 20%; padding-top: 20px">
-    <form id = "registerForm" class ="border rounded p-3" method="POST" action="{{ url_for('auth.login') }}" enctype="multipart/form-data">
-         <h4 style="text-align: center;">Welcome back!</h4>
+<div  class="container-fluid" style="padding-right: 20%; padding-left: 20%; padding-top: 20px">
+    <form id = "registerForm" class ="border rounded p-3" method="POST" action="{{ url_for('auth.register_owner') }}" enctype="multipart/form-data">
+         <h4 style="text-align: center;">Register to have more features</h4>
     <div class="mb-3">
       <label for="username" class="form-label">Username</label>
       <input type="text" id="username" name="username" class="form-control" placeholder="Enter your username", required="required">
@@ -57,13 +56,15 @@
    <input type="password" id="password" name="password" class="form-control" placeholder="Enter your password", required="required">
     </div>
         <br>
-
-  <button type="submit" class="btn btn-dark d-block mx-auto">Login</button>
+      <div class="mb-3">
+  <label for="email" class="form-label">Email</label>
+   <input type="email" id="email" name="email" class="form-control" placeholder="Enter your email", required="required">
+    </div>
+  <button type="submit" class="btn btn-dark d-block mx-auto">Register</button>
         <br>
-      <div style=" text-align: center;">
-    <a href="{{ url_for('auth.register') }}">Don't have an account? Register here</a>
+           <div style=" text-align: center;">
+    <a href="{{ url_for('auth.login') }}">Already have account? Log in here</a>
 </div>
-
     </form>
 </div>
 </body>

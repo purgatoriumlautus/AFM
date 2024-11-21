@@ -47,7 +47,7 @@
   </div>
 </nav>
 <div  class="container-fluid" style="padding-right: 10%; padding-left: 10%; padding-top: 20px">
-<form id = "reportForm" class ="border rounded p-3" method="POST" action="/create-report" enctype="multipart/form-data">
+<form id = "reportForm" class ="border rounded p-3" method="POST" action="{{ url_for('report.create_report') }}" enctype="multipart/form-data">
     <div class="mb-3">
       <label for="location" class="form-label">Your coordinates</label>
       <input type="text" id="location" name="location" class="form-control" placeholder="Enter your location or use current location">

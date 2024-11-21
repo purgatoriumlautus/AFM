@@ -10,11 +10,5 @@ main = Blueprint('main', __name__)
 
 @main.route('/', methods=['GET', 'POST'])
 def mainpage():
-    if current_user.is_authenticated:
-        # IF USER IS LOGGED IN
-        reports = Report.all_reports()
-        return render_template('mainpage.html', reports=reports)
-    else:
-        reports = Report.all_reports()
-
-    return render_template('mainpage.html', reports=reports)
+    reports = Report.all_reports()
+    return render_template('mainpage.html', reports=reports, current_user=current_user)
