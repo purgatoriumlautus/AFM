@@ -17,21 +17,6 @@
 </head>
 
 <body>
-<div class="modal fade" id="signInModal" tabindex="-1" aria-labelledby="signInModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-          <h6>Sigh in</h6>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body text-center">
-          <h6 >Choose how you'd like to sign in:</h6>
-        <a href="{{ url_for('auth.register') }}" class="btn btn-dark m-2">As Public User</a>
-        <a href="{{ url_for('auth.register_owner') }}" class="btn btn-dark m-2">As Organization Owner</a>
-      </div>
-    </div>
-  </div>
-</div>
 
 <nav style="font-family: Calibri; font-size: large" class="navbar sticky-top navbar-expand-lg navbar-light bg-light">
   <div style="margin-left: 10%; margin-right: 40%" class="navbar-brand">
@@ -46,12 +31,12 @@
       <li class="nav-item active">
         <a style="color: #4e8fcc; background-color: #d7e1f3" class="nav-link" href="{{ url_for('main.mainpage') }}">Map</a>
       </li>
-        {% if current_user.is_authenticated %}
+        {% if current_user.is_authenticated and not current_user.agent and not  current_user.manager and not current_user.is_owner%}
         <li class="nav-item active">
           <a class="nav-link l" href="{{ url_for('report.create_report') }}">Report</a>
         </li>
         {% endif %}
-         {% if current_user.agent or current_user.manager  %}
+         {% if current_user.is_authenticated%}
         <li class="nav-item active">
           <a class="nav-link l" href="#">Profile</a>
         </li>
@@ -66,7 +51,7 @@
         <a class="nav-link l" href="{{ url_for('auth.logout') }}">Sign out</a>
           
         {% else %}
-          <a class="nav-link l" href="#" data-bs-toggle="modal" data-bs-target="#signInModal">Sign in</a>
+          <a class="nav-link l" href="{{ url_for('auth.login') }}">Log in</a>
         {% endif %}
       </li>
     </ul>
@@ -91,7 +76,7 @@
     {% endfor %}
 
 </script>
-{% if current_user.agent or current_user.manager  %}
+{% if current_user.agent or current_user.manager or current_user.is_owner %}
 <script src="{{ url_for('static', filename='scripts/mainpage_manager.js') }}"></script>
 {% else %}
 <script src="{{ url_for('static', filename='scripts/mainpage_user.js') }}"></script> <!-- based on location displayes reports -->
