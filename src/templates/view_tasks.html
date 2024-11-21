@@ -1,0 +1,13 @@
+{% for task in tasks %}
+    <div>
+        <h3>{{ task.location }} - {{ task.status }}</h3>
+        <p>{{ task.description }}</p>
+        <p>Created by: {{ task.manager.username }}</p>
+        <p>Reports:</p>
+        <ul>
+            {% for report in task.reports %}
+                <li>{{ report.description }} (Location: {{ report.location }})</li>
+            {% endfor %}
+        </ul>
+    </div>
+{% endfor %}

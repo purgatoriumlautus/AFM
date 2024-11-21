@@ -3,17 +3,13 @@ import os
 from sqlalchemy import inspect
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 # Add the project directory to the Python path
+from src.app import create_app
 from src.db import db
 from src.models import User, Report
-from src.app import create_app
-from flask_bcrypt import Bcrypt
-
-
+from src.extensions import bcrypt
 
 
 app = create_app()
-bcrypt = Bcrypt(app)
-
 
 
 def initiate_db(app):
@@ -25,7 +21,7 @@ def initiate_db(app):
         print("-------------------\n|||||||||||||")
         # Add users
         users = [
-            User(username='admin', password=bcrypt.generate_password_hash('123').decode('utf-8'), email='@example.com'),
+            User(username='admin', password=bcrypt.generate_password_hash('1').decode('utf-8'), email='123@example.com',is_owner=True),
             User(username='Andrew', password=bcrypt.generate_password_hash('1234').decode('utf-8'), email='user1@example.com'),
             User(username='user2', password=bcrypt.generate_password_hash('1234').decode('utf-8'), email='user2@example.com'),
             User(username='user3', password=bcrypt.generate_password_hash('1234').decode('utf-8'), email='user3@example.com'),
@@ -41,16 +37,18 @@ def initiate_db(app):
 
         # Add reports
         reports = [
-            Report(location='48.2082,16.3738', description='Scary', photo_file='photo1.jpg'),
-            Report(location='47.8095,13.0550', description='Crazy', photo_file='photo2.jpg'),
-            Report(location='47.2692,11.4041', description='Holy shit', photo_file='photo3.jpg'),
-            Report(location='47.2260,13.3341', description='OMG', photo_file='photo4.jpg'),
-            Report(location='47.2228,13.2950', description='WOW', photo_file='photo5.jpg'),
-            Report(location='47.3660,13.4560', description='I want to', photo_file='pic1.jpg'),
-            Report(location='47.2100,13.3750', description='No way', photo_file='photo7.jpg'),
-            Report(location='47.1600,13.4500', description='Impossible', photo_file='photo8.jpg'),
-            Report(location='47.2200,13.4000', description='I can\'t believe my eyes', photo_file='photo9.jpg'),
+            Report(location='48.2082,16.3738', description='Scary', photo_file='photo1.jpg',creator_id=1),
+            Report(location='47.8095,13.0550', description='Crazy', photo_file='photo2.jpg',creator_id=2),
+            Report(location='47.2692,11.4041', description='Holy shit', photo_file='photo3.jpg',creator_id=3),
+            Report(location='47.2260,13.3341', description='OMG', photo_file='photo4.jpg',creator_id=4),
+            Report(location='47.2228,13.2950', description='WOW', photo_file='photo5.jpg',creator_id=5),
+            Report(location='47.3660,13.4560', description='I want to', photo_file='pic1.jpg',creator_id=6),
+            Report(location='47.2100,13.3750', description='No way', photo_file='photo7.jpg',creator_id=7),
+            Report(location='47.1600,13.4500', description='Impossible', photo_file='photo8.jpg',creator_id=4),
+            Report(location='47.2200,13.4000', description='I can\'t believe my eyes', photo_file='photo9.jpg',creator_id=2),
         ]
+        
+        
         # Insert data into the database
         db.session.bulk_save_objects(users)
         db.session.bulk_save_objects(reports)
@@ -58,6 +56,10 @@ def initiate_db(app):
         print("-------------------\n*CREATED THE TABLES*")
         inspector = inspect(db.engine)
         tables = inspector.get_table_names()
+        
+        
+        
+        
         for table in tables:
             print(table)
         print('-------------------\n|||||||||||||')

@@ -1,0 +1,28 @@
+
+<form method="POST" action="{{ url_for('task.create_task') }}">
+    <div>
+        <label for="location">Location:</label>
+        <input type="text" id="location" name="location" required>
+    </div>
+    <div>
+        <label for="description">Description:</label>
+        <textarea id="description" name="description" required></textarea>
+    </div>
+    <div>
+        <label for="status">Status:</label>
+        <select id="status" name="status">
+            <option value="New">New</option>
+            <option value="In Progress">In Progress</option>
+            <option value="Completed">Completed</option>
+        </select>
+    </div>
+    <div>
+        <label for="reports">Select Reports:</label>
+        <select name="report_ids" multiple>
+            {% for report in reports %}
+                <option value="{{ report.id }}">{{ report.description }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <button type="submit">Create Task</button>
+</form>
