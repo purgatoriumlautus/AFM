@@ -4,24 +4,24 @@
     <meta charset="UTF-8">
     <title>Register Page</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
-    <script type="text/javascript">
-        // Trigger alert if alert_message exists
-        {% if alert_message %}
-            alert("{{ alert_message }}");
-             {% if redirect_to %}
-                window.location.href = "{{ url_for('auth.register')}}";
-            {% endif %}
-        {% endif %}
-    </script>
 <style>
-        .navbar .nav-link.l:hover {
-            transition: background-color 0.3s ease;
-            color: #4e8fcc;
+        .navbar .nav-link.li {
+          color: #4e8fcc; background-color: #d7e1f3
         }
     </style>
 </head>
 
 <body>
+{% include "navbar.html" %}
+<div class="container mt-4">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="alert alert-{{ messages[0][0] }} mt-3">
+                {{ messages[0][1] }}
+            </div>
+        {% endif %}
+    {% endwith %}
+</div>
 <div class="modal fade" id="signInModal" tabindex="-1" aria-labelledby="signInModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
@@ -37,27 +37,6 @@
     </div>
   </div>
 </div>
-<nav style="font-family: Calibri; font-size: large" class="navbar sticky-top navbar-expand-lg navbar-light bg-light">
-  <div style="margin-left: 10%; margin-right: 40%" class="navbar-brand">
-      <span style="font-weight: bold">AFM</span><br>
-      <span style="color: #545252;">Austrian Flood Monitoring System</span>
-  </div>
-  <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-    <span class="navbar-toggler-icon"></span>
-  </button>
-  <div class="collapse navbar-collapse m-2" id="navbarSupportedContent">
-    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-      <li class="nav-item active">
-        <a  class="nav-link l" href="{{ url_for('main.mainpage') }}">Map</a>
-      </li>
-        <li class="nav-item active">
-
-          <a style="color: #4e8fcc; background-color: #d7e1f3" class="nav-link l" href="{{ url_for('auth.login') }}">Log in</a>
-
-      </li>
-    </ul>
-  </div>
-</nav>
 
     <div  class="container-fluid" style="padding-right: 20%; padding-left: 20%; padding-top: 20px">
     <form id = "registerForm" class ="border rounded p-3" method="POST" action="{{ url_for('auth.login') }}" enctype="multipart/form-data">

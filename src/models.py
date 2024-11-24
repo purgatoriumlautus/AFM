@@ -19,6 +19,7 @@ class User(db.Model, UserMixin):
     # These are one-to-one relationships but optional
     agent = db.relationship('Agent', back_populates='user', uselist=False)
     manager = db.relationship('Manager', back_populates='user', uselist=False)
+    organisation_id = db.Column(db.Integer, db.ForeignKey('organizations.id'))
 
 
 
@@ -87,8 +88,15 @@ class Report(db.Model):
     def all_reports():
         return Report.query.all()
 
+class Organisation(db.Model):
+    __tablename__ = 'organizations'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    token = db.Column(db.String(100), unique=True, nullable=True)
 
-    
+    # Relationship with users
+    users = db.relationship('User', backref='organization')
 
+db.UniqueConstraint('organization_id', 'is_owner', name='unique_owner_organization')
 
 

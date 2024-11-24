@@ -5,43 +5,30 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard</title>
-    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
+     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+<style>
+        .navbar .nav-link.ma {
+          color: #4e8fcc; background-color: #d7e1f3
+        }
+
+    </style>
 </head>
+
 <body>
-
-    <!-- Navigation Bar -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <a class="navbar-brand" href="#">Admin Panel</a>
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav ml-auto">
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('admin.admin_dashboard') }}">Dashboard</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('auth.logout') }}">Logout</a>
-                </li>
-            </ul>
-        </div>
-    </nav>
-
-    <!-- Flash Messages -->
-    <div class="container mt-4">
-        {% with messages = get_flashed_messages(with_categories=true) %}
+{% include "navbar.html" %}
+{% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 <div class="alert alert-{{ messages[0][0] }} mt-3">
                     {{ messages[0][1] }}
                 </div>
             {% endif %}
         {% endwith %}
-    </div>
-
-    <!-- Main Content -->
-    <div class="container mt-4">
-        <h2 class="text-center">Admin Dashboard</h2>
-
+    <div class="container fluid ">
+   <br>
+    <p>Share this link with others to invite them to your organization:</p>
+    <input type="text" readonly value="{{ invitation_link }}" style="width: 100%;">
+    <br>
+    <br>
         <h3>Manage Users</h3>
         
         <table class="table table-bordered">
@@ -83,15 +70,8 @@
             </tbody>
         </table>
     </div>
+</div>
+   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
 
-    <!-- Footer -->
-    <footer class="bg-light text-center py-3 mt-4">
-        <p>&copy; 2024 Admin Panel</p>
-    </footer>
-
-    <!-- Optional JavaScript -->
-    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
-</body>
+   </body>
 </html>
