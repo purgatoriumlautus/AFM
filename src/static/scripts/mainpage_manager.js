@@ -47,9 +47,9 @@ console.log(reports);
             <span>Water levels</span><br>
             <img src="static/marker-icon.png" alt="Report Icon" width="20" height="30">
             <span>Flood report</span> <br>
-            <img src="https://inspire.lfrz.gv.at/000801/ows?service=WMS&version=1.3.0&request=GetLegendGraphic&format=image%2Fpng&width=20&height=20&layer=Hochwasserrisikogebiete%20HQ30&style=UEFF_HQ30" >
+            <img src="https://inspire.lfrz.gv.at/000801/ows?service=WMS&version=1.3.0&request=GetLegendGraphic&format=image%2Fpng&width=20&height=20&layer=Hochwasserrisikogebiete%20HQ30"" >
             <span>HQ30 Risk areas</span><br>
-            <img src="https://inspire.lfrz.gv.at/000801/ows?service=WMS&version=1.3.0&request=GetLegendGraphic&format=image%2Fpng&width=20&height=20&layer=Hochwasserueberflutungsflaechen%20HQ100" >
+            <img src = "https://inspire.lfrz.gv.at/000801/ows?service=WMS&version=1.3.0&request=GetLegendGraphic&format=image%2Fpng&width=20&height=20&layer=Hochwasserueberflutungsflaechen%20HQ30&style=UEFF_HQ30" >
             <span>HQ30 Flooding regions</span>
         `;
         return div;
