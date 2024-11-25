@@ -45,3 +45,6 @@ jobs:
 
     - name: Test Docker containers
       run: pytest tests/test_DockerContainers.py
+
+    - name: Test HTTP Connection
+      run: pytest tests/Test_HTTP_Endpoints.py
