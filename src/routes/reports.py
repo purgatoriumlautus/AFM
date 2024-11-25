@@ -38,9 +38,13 @@ def create_report():
 @report.route('/view_reports', methods=['GET'])
 @login_required
 def view_reports():
-    # Check if the user is a manager (optional, if only managers can view reports)
-    reports = Report.query.all()  # Optionally filter based on approval status
-    return render_template('reports.html', reports=reports)
+    manager = Manager.query.filter_by(user_id=current_user.uid).first()
+    if not manager:
+        flash('Access denied. Only managers can manage reports.', 'error')
+        return redirect(url_for('main.mainpage'))
+    else:
+        reports = Report.query.all()  # Optionally filter based on approval status
+        return render_template('reports.html', reports=reports)
 
 
 @report.route('/view_reports/<int:report_id>', methods=['GET', 'POST'])
@@ -58,6 +62,7 @@ def manage_report(report_id):
 
         action = request.form.get('action')
         if action == 'approve':
+            report.is_approved = True
             report.approver_id = manager.id
             db.session.commit()
             flash('Report approved successfully.', 'success')

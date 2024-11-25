@@ -42,7 +42,7 @@
                     <td>{{ report.location }}</td>
                     <td>{{ report.description }}</td>
                     <td>
-                        {% if report.approver_id %}
+                        {% if report.is_approved %}
                             <span >Approved</span>
                         {% else %}
                             <span >Pending</span>

@@ -43,7 +43,7 @@
 
     var reports = [];
     {% for report in reports %}
-        {% if report.approver_id %}
+        {% if report.is_approved %}
             var reportdet = {
             id: "{{ report.id }}",
             location: "{{ report.location }}",
