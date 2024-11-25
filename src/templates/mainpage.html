@@ -43,13 +43,15 @@
 
     var reports = [];
     {% for report in reports %}
-        var reportdet = {
+        {% if report.approver_id %}
+            var reportdet = {
             id: "{{ report.id }}",
             location: "{{ report.location }}",
             description: "{{ report.description }}",
             photo_file: "{{ report.photo_file if report.photo_file else '' }}"
         };
         reports.push(reportdet);
+        {% endif %}
     {% endfor %}
 
 </script>

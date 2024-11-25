@@ -72,11 +72,11 @@ class Report(db.Model):
     photo_file = db.Column(db.String(100), nullable=True)
     creator_id = db.Column(db.Integer, db.ForeignKey('users.uid'), nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-
+    approver_id = db.Column(db.Integer, db.ForeignKey('managers.id'), nullable=True)
 
     # One-to-One Relationship with User (ensures only one report per user)
     creator = db.relationship('User', back_populates='report')
-
+    approver = db.relationship('Manager', backref='approved_reports')
     def __init__(self, location, description, photo_file=None, creator_id=None, task_id=None):
         self.location = location
         self.description = description

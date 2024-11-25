@@ -19,6 +19,11 @@
           <a class="nav-link r" href="{{ url_for('report.create_report') }}">Report</a>
         </li>
         {% endif %}
+    {% if current_user.is_authenticated and current_user.manager %}
+        <li class="nav-item active">
+          <a class="nav-link vr" href="{{ url_for('report.view_reports') }}">Reports</a>
+        </li>
+        {% endif %}
          {% if current_user.is_authenticated%}
         <li class="nav-item active">
           <a class="nav-link p" href="#">Profile</a>
