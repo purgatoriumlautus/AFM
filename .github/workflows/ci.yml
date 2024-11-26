@@ -50,4 +50,4 @@ jobs:
       run: pytest tests/Test_HTTP_Endpoints.py
 
     - name: Test Register User
-      run: pytest tests/Test_Register_User.py
+      run: pytest tests/Test_Registering_User.py
