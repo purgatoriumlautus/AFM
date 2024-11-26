@@ -1,40 +1,40 @@
 import pytest
 import requests
 
-import subprocess  # Ensure subprocess is imported
-import time
+# import subprocess  # Ensure subprocess is imported
+# import time
 
-@pytest.fixture(scope="session", autouse=True)
-def start_docker_containers():
-    """Start the containers and ensure they are running."""
-    try:
-        # Start the containers
-        result = subprocess.run(
-            ["docker-compose", "up", "-d", "--build"],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-        )
-        assert result.returncode == 0, f"docker-compose up failed: {result.stderr}"
+# @pytest.fixture(scope="session", autouse=True)
+# def start_docker_containers():
+#     """Start the containers and ensure they are running."""
+#     try:
+#         # Start the containers
+#         result = subprocess.run(
+#             ["docker-compose", "up", "-d", "--build"],
+#             stdout=subprocess.PIPE,
+#             stderr=subprocess.PIPE,
+#             text=True,
+#         )
+#         assert result.returncode == 0, f"docker-compose up failed: {result.stderr}"
 
-        # Wait for containers to initialize
-        time.sleep(10)  # Adjust based on your application's startup time
+#         # Wait for containers to initialize
+#         time.sleep(10)  # Adjust based on your application's startup time
 
-        # Verify containers are running
-        result = subprocess.run(
-            ["docker-compose", "ps"],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-        )
-        assert "Up" in result.stdout, f"Containers are not running: {result.stdout}"
+#         # Verify containers are running
+#         result = subprocess.run(
+#             ["docker-compose", "ps"],
+#             stdout=subprocess.PIPE,
+#             stderr=subprocess.PIPE,
+#             text=True,
+#         )
+#         assert "Up" in result.stdout, f"Containers are not running: {result.stdout}"
 
-        # Yield to allow tests to run
-        yield
+#         # Yield to allow tests to run
+#         yield
 
-    finally:
-        # Tear down containers after tests
-        print("Tearing down the containers")
+#     finally:
+#         # Tear down containers after tests
+#         print("Tearing down the containers")
 
 
 @pytest.fixture(scope="module")
