@@ -19,6 +19,7 @@ class User(db.Model, UserMixin):
     # These are one-to-one relationships but optional
     agent = db.relationship('Agent', back_populates='user', uselist=False)
     manager = db.relationship('Manager', back_populates='user', uselist=False)
+    organisation_id = db.Column(db.Integer, db.ForeignKey('organizations.id'))
 
 
 
@@ -71,11 +72,10 @@ class Report(db.Model):
     photo_file = db.Column(db.String(100), nullable=True)
     creator_id = db.Column(db.Integer, db.ForeignKey('users.uid'), nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-
-
-    # One-to-One Relationship with User (ensures only one report per user)
+    is_approved = db.Column(db.Boolean, default=False, nullable=False)
+    approver_id = db.Column(db.Integer, db.ForeignKey('managers.id'), nullable=True)
     creator = db.relationship('User', back_populates='report')
-
+    approver = db.relationship('Manager', backref='approved_reports')
     def __init__(self, location, description, photo_file=None, creator_id=None, task_id=None):
         self.location = location
         self.description = description
@@ -87,8 +87,15 @@ class Report(db.Model):
     def all_reports():
         return Report.query.all()
 
+class Organisation(db.Model):
+    __tablename__ = 'organizations'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    token = db.Column(db.String(100), unique=True, nullable=True)
 
-    
+    # Relationship with users
+    users = db.relationship('User', backref='organization')
 
+db.UniqueConstraint('organization_id', 'is_owner', name='unique_owner_organization')
 
 

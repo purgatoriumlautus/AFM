@@ -1,62 +1,49 @@
-<style>
-  /* Changes background color of links on hover */
-  .navbar .nav-link.h:hover {
-    transition: background-color 0.3s ease;
-      color:#4e8fcc ;
 
-  }
+<body>
 
-.navbar .nav-link.s:hover {
-    transition: background-color 0.3s ease;
-      color:#4e8fcc ;
-
-  }
-#navbarDropdown:hover {
-    transition: background-color 0.3s ease;
-      color: #4e8fcc ;
-
-  }
-.navbar .nav-link.p:hover {
-    transition: background-color 0.3s ease;
-      color: #4e8fcc ;
-
-  }
-</style>
 <nav style="font-family: Calibri; font-size: large" class="navbar sticky-top navbar-expand-lg navbar-light bg-light">
-  <div style="margin-left: 10%; " class="navbar-brand" href="#"><span style="font-weight: bold">AFM</span> <br>
-      <span style="color: #545252; ">Austrian Flood Monitoring System</span></div>
-
-  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+  <div style="margin-left: 10%; margin-right: 40%" class="navbar-brand">
+      <span style="font-weight: bold">AFM</span><br>
+      <span style="color: #545252;">Austrian Flood Monitoring System</span>
+  </div>
+  <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
     <span class="navbar-toggler-icon"></span>
   </button>
-
-  <div style="margin-left: 45%" class="collapse navbar-collapse" id="navbarSupportedContent">
-    <ul class="navbar-nav mr-auto">
+  <div class="collapse navbar-collapse m-2" id="navbarSupportedContent">
+    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
       <li class="nav-item active">
-        <a style="color: #4e8fcc" class="nav-link h" href="/">Map <span class="sr-only"></span></a>
+        <a class="nav-link m" href="{{ url_for('main.mainpage') }}">Map</a>
       </li>
-
-     <li class="nav-item dropdown">
-        <a class="nav-link dropdown-toggle active " href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-          Reports
-        </a>
-        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-          <a class="dropdown-item" href="#">See reports</a>
-          <div class="dropdown-divider"></div>
-          <a class="dropdown-item" href="#">Create new report</a>
-        </div>
-      </li>
+        {% if current_user.is_authenticated and not current_user.agent and not  current_user.manager and not current_user.is_owner%}
         <li class="nav-item active">
-        <a class="nav-link p" href="#">Profile</a>
-      </li>
-         <li class="nav-item active">
-             {% if current_user.is_authenticated %}
-                <a class="nav-link s" href="{{url_for("auth.logout")}}">Sign out</a>
-             {% else %}
-                <a class="nav-link s" href="{{url_for("auth.login")}}">Sign in</a>
-             {% endif %}
-      </li>
+          <a class="nav-link r" href="{{ url_for('report.create_report') }}">Report</a>
+        </li>
+        {% endif %}
+    {% if current_user.is_authenticated and current_user.manager %}
+        <li class="nav-item active">
+          <a class="nav-link vr" href="{{ url_for('report.view_reports') }}">Reports</a>
+        </li>
+        {% endif %}
+         {% if current_user.is_authenticated%}
+        <li class="nav-item active">
+          <a class="nav-link p" href="#">Profile</a>
+        </li>
+        {% endif %}
 
+        {% if current_user.is_owner and current_user.organisation_id%}
+          <a class="nav-link ma" href="{{ url_for('admin.admin_dashboard') }}">Manage Roles</a>
+        {% endif %}
+         {% if current_user.is_owner and not current_user.organisation_id %}
+             <a class="nav-link cr" href="{{ url_for('admin.create_organisation') }}">Create Organisation</a>
+        {% endif %}
+        <li class="nav-item active">
+        {% if current_user.is_authenticated %}
+        <a class="nav-link so" href="{{ url_for('auth.logout') }}">Sign out</a>
+
+        {% else %}
+          <a class="nav-link li" href="{{ url_for('auth.login') }}">Log in</a>
+        {% endif %}
+      </li>
     </ul>
   </div>
 </nav>

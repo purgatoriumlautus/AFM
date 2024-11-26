@@ -3,27 +3,36 @@ console.log(reports);
 
     // OpenStreetMap as a base map
     var basemap = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        zoom:13,
+        maxZoom: 19,
         attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
 
-   var waterlevels = L.tileLayer.wms("https://gis.lfrz.gv.at/wmsgw/?key=460276c6b17d485ea29604196d48fb5a", {
+   var waterlevels = L.tileLayer.wms("https://gis.lfrz.gv.at/wmsgw/?key=460276c6b17d485ea29604196d48fb5a&service=WMS&version=1.3.0&request=GetLegendGraphic&format=image%2Fpng&width=20&height=20&layer=pegelaktuell", {
         layers: 'pegelaktuell',
         format: 'image/png',
         transparent: true,
     }).addTo(map);
-
-   var markers = L.markerClusterGroup();
-
-    // Add markers for reports
-    reports.forEach(function (report) {
+function getDistance(lat1, lon1, lat2, lon2) {
+    const R = 6371;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+              Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c; // Distance in km
+}
+var markers = L.markerClusterGroup();
+function showReports(userLat, userLng, radius) {
+    markers.clearLayers();
+    reports.forEach(function(report) {
         if (report.location) {
-            var coords = report.location.split(',');
-            var lat = parseFloat(coords[0]);
-            var lng = parseFloat(coords[1]);
-
-            if (!isNaN(lat) && !isNaN(lng)) {
-                var marker = L.marker([lat, lng]);
+            const coords = report.location.split(',');
+            const lat = parseFloat(coords[0]);
+            const lng = parseFloat(coords[1]);
+            const distance = getDistance(userLat, userLng, lat, lng);
+            if (distance <= radius) {
+                const marker = L.marker([lat, lng]);
                 marker.bindPopup(`
                     <strong>Description:</strong> ${report.description}<br>
                     <strong>Location:</strong> ${lat}, ${lng}
@@ -34,9 +43,46 @@ console.log(reports);
     });
 
     map.addLayer(markers);
+}
 
-    // Legend
-    var legend = L.control({ position: 'bottomright' });
+function getUserLocation() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const userLat = position.coords.latitude;
+                const userLng = position.coords.longitude;
+                const radius = 20;
+                showReports(userLat, userLng, radius);
+            },
+            (error) => showError(error)
+        );
+    } else {
+        alert("Geolocation is not supported by this browser.");
+    }
+}
+
+function showError(error) {
+    switch (error.code) {
+        case error.PERMISSION_DENIED:
+            alert("Permission denied. Please enable location access or enter your location manually.");
+            break;
+        case error.POSITION_UNAVAILABLE:
+            alert("Location information is unavailable.");
+            break;
+        case error.TIMEOUT:
+            alert("The request to get user location timed out.");
+            break;
+        case error.UNKNOWN_ERROR:
+            alert("An unknown error occurred.");
+            break;
+    }
+}
+
+window.onload = function() {
+    getUserLocation();
+};
+
+ var legend = L.control({ position: 'bottomright' });
     legend.onAdd = function (map) {
         var div = L.DomUtil.create('div', 'info legend');
         div.style.backgroundColor = 'white';
