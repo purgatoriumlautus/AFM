@@ -40,9 +40,9 @@ def create_report():
 @login_required
 def view_reports():
     if request.method == 'POST':
-        report_id = request.form.get('report_id')  # Получаем ID отчета из формы
+        report_id = request.form.get('report_id')  
 
-        # Находим отчет по ID
+        #
         report_to_delete = Report.query.get(report_id)
 
         if not report_to_delete:
@@ -54,7 +54,7 @@ def view_reports():
             flash('You are not authorized to delete this report.', 'error')
             return redirect(url_for('report.view_reports'))
 
-        # Удаляем отчет
+        # 
         db.session.delete(report_to_delete)
         db.session.commit()
 
@@ -62,6 +62,6 @@ def view_reports():
         return redirect(url_for('report.view_reports'))
     
     else:
-        # GET запрос — отображаем все отчеты
+        #
         reports = Report.query.all()
         return render_template('reports.html', reports=reports)

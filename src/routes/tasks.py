@@ -5,6 +5,7 @@ from src.db import db
 task = Blueprint('task', __name__)
 
 
+
 #to be done
 @task.route('/create-task', methods=['GET', 'POST'])
 @login_required
