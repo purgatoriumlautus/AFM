@@ -24,9 +24,12 @@ def base_url(initialize_database):
     """Base URL for the application."""
     return "http://localhost:5000"
 
-def test_user_registration(base_url):
-    """Test user registration via the /register endpoint and delete the user after."""
+def test_register_and_login_user(base_url):
+    """Test user registration and login functionality."""
     register_url = f"{base_url}/register"
+    login_url = f"{base_url}/login"
+    delete_user_url = f"{base_url}/delete-user"
+    
     user_data = {
         "username": "testuser",
         "password": "testpassword",
@@ -34,10 +37,17 @@ def test_user_registration(base_url):
     }
 
     # Step 1: Register the user
-    response = requests.post(register_url, data=user_data)
-    assert response.status_code == 200, "User registration failed"
+    register_response = requests.post(register_url, data=user_data)
+    assert register_response.status_code == 200, "User registration failed"
 
-    # Step 2: Clean up by deleting the user
-    delete_user_url = f"{base_url}/delete-user"
-    delete_response = requests.post(delete_user_url, data={"username": "testuser"})
+    # Step 2: Login with the registered user credentials
+    login_response = requests.post(login_url, data={
+        "username": user_data["username"],
+        "password": user_data["password"]
+    })
+    assert login_response.status_code == 200, "User login failed"
+    assert "Welcome" in login_response.text or login_response.url.endswith("/"), "Login did not redirect to the main page"
+
+    # Step 3: Clean up by deleting the user
+    delete_response = requests.post(delete_user_url, data={"username": user_data["username"]})
     assert delete_response.status_code == 200, "User deletion failed"
