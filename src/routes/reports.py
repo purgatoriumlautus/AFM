@@ -15,7 +15,6 @@ report = Blueprint("report",__name__)
 @report.route('/create-report', methods = ['GET','POST'] )
 @login_required
 def create_report():
-    
     if request.method == "GET":
         return(render_template('report.html'))
     location = request.form.get('location')
@@ -34,7 +33,8 @@ def create_report():
     db.session.add(report)
     db.session.commit()
     return redirect(url_for('main.mainpage'))
-    
+
+
 @report.route('/view_reports', methods=['GET'])
 @login_required
 def view_reports():

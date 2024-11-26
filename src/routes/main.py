@@ -4,14 +4,17 @@ from src.models import User,Report,Organisation
 from src.extensions import bcrypt
 from src.db import db
 
-main = Blueprint('main', __name__)
 
+main = Blueprint('main', __name__)
 
 
 @main.route('/', methods=['GET', 'POST'])
 def mainpage():
     reports = Report.all_reports()
     return render_template('mainpage.html', reports=reports, current_user=current_user)
+
+
+
 @main.route('/join/<token>', methods=['GET'])
 @login_required
 def join_organization(token):

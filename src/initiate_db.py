@@ -5,7 +5,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 # Add the project directory to the Python path
 from src.app import create_app
 from src.db import db
-from src.models import User, Report
+from src.models import User, Report,Agent,Manager,Organisation
 from src.extensions import bcrypt
 
 
@@ -17,12 +17,22 @@ def initiate_db(app):
         # Clear existing data
         db.drop_all()
         db.create_all()
-        print("-------------------\n*INITIALIZING THE DATA BASE, POPULATING WITH DUMMY DATA*")
+        
+        print("-------------------\n*INITIALIZING THE DATABASE, POPULATING WITH DUMMY DATA*")
         print("-------------------\n|||||||||||||")
+
+        # Add an organization
+        organization = Organisation(name="Example Organization", token="org_token_123")
+        db.session.add(organization)
+        db.session.commit()
+
+
         # Add users
         users = [
             User(username='admin', password=bcrypt.generate_password_hash('1').decode('utf-8'), email='123@example.com',is_owner=True),
-            User(username='Andrew', password=bcrypt.generate_password_hash('1234').decode('utf-8'), email='user1@example.com'),
+            User(username='agent1', password=bcrypt.generate_password_hash('agent123').decode('utf-8'), email='agent1@example.com'),
+            User(username='agent2', password=bcrypt.generate_password_hash('agent123').decode('utf-8'), email='agent2@example.com'),
+            User(username='manager1', password=bcrypt.generate_password_hash('manager123').decode('utf-8'), email='user1@example.com'),
             User(username='user2', password=bcrypt.generate_password_hash('1234').decode('utf-8'), email='user2@example.com'),
             User(username='user3', password=bcrypt.generate_password_hash('1234').decode('utf-8'), email='user3@example.com'),
             User(username='user4', password=bcrypt.generate_password_hash('1234').decode('utf-8'), email='user4@example.com'),
@@ -33,11 +43,40 @@ def initiate_db(app):
             User(username='user9', password=bcrypt.generate_password_hash('1234').decode('utf-8'), email='user9@example.com'),
             User(username='user10', password=bcrypt.generate_password_hash('1234').decode('utf-8'), email='user10@example.com'),
         ]
+        
+        
+        for c in range(1,4):
+            users[c].organisation_id = organization.id
+
+
+
+        db.session.bulk_save_objects(users)
+        db.session.commit()
+
+
+        # Assign roles
+        manager = Manager(user_id=4, position='Manager')
+        agents = [
+            Agent(user_id=2, position='Support Agent'),
+            Agent(user_id=3, position='Field Agent'),
+        ]
+
+
+        db.session.add(manager)
+        db.session.bulk_save_objects(agents)
+        db.session.commit()
 
 
         # Add reports
         reports = [
-            Report(location='48.2082,16.3738', description='Scary', photo_file='photo1.jpg',creator_id=1),
+            Report(location='48.2082,16.3738', description='Scary', photo_file='photo1.jpg', creator_id=2, approver_id=1, is_approved=True),
+            Report(location='47.8095,13.0550', description='Crazy', photo_file='photo2.jpg', creator_id=3, approver_id=1, is_approved=False),
+            Report(location='47.2692,11.4041', description='Interesting', photo_file='photo3.jpg', creator_id=2, approver_id=None, is_approved=False),
+        ]
+
+
+        reports = [
+            Report(location='48.2082,16.3738', description='Scary', photo_file='photo1.jpg',creator_id=1,is_approved=True,approver_id=4),
             Report(location='47.8095,13.0550', description='Crazy', photo_file='photo2.jpg',creator_id=2),
             Report(location='47.2692,11.4041', description='Holy shit', photo_file='photo3.jpg',creator_id=3),
             Report(location='47.2260,13.3341', description='OMG', photo_file='photo4.jpg',creator_id=4),
@@ -47,36 +86,50 @@ def initiate_db(app):
             Report(location='47.1600,13.4500', description='Impossible', photo_file='photo8.jpg',creator_id=4),
             Report(location='47.2200,13.4000', description='I can\'t believe my eyes', photo_file='photo9.jpg',creator_id=2),
         ]
-        
-        
-        # Insert data into the database
-        db.session.bulk_save_objects(users)
+
+
         db.session.bulk_save_objects(reports)
         db.session.commit()
+
+
         print("-------------------\n*CREATED THE TABLES*")
+        
+
         inspector = inspect(db.engine)
         tables = inspector.get_table_names()
-        
-        
-        
-        
         for table in tables:
             print(table)
+        
+
         print('-------------------\n|||||||||||||')
+        print("-------------------\n*SUCCESSFULLY POPULATED THE ORGANIZATION*")
+        print(f"Organization: {organization.name}, Token: {organization.token}")
+        print("-------------------\n|||||||||||||")
+        print("-------------------\n*SUCCESSFULLY POPULATED THE DB WITH USERS*")
         
-        print("-------------------\n*SUCCESFULLY POPULATED THE DB WITH USERS*")
+        for user in User.query.all():
+            print(f"Username: {user.username}, Email: {user.email}, Organization: ")
         
-        users = User.query.all()
-        for user in users:
-            print(f"Username: {user.username}, Email: {user.email}")
+        print("-------------------\n|||||||||||||")
+        print("-------------------\n*SUCCESSFULLY POPULATED THE DB WITH ROLES*")
+        print(f"Manager: {manager.user.username}, Position: {manager.position}")
+        
+        for agent in Agent.query.all():
+            print(f"Agent: {agent.user.username}, Position: {agent.position}")
+        
+        print("-------------------\n|||||||||||||")
+        print("-------------------\n*SUCCESSFULLY POPULATED THE DB WITH REPORTS*")
+        
+        for report in Report.query.all():
+            print(f"Location: {report.location}, Description: {report.description}, Photo: {report.photo_file}, "
+                  f"Creator: {report.creator.username}, Approver: {report.approver.user.username if report.approver else 'None'}, "
+                  f"Approved: {report.is_approved}")
+        
         print("-------------------\n|||||||||||||")
 
-        print("-------------------\n*SUCCESFULLY POPULATED THE DB WITH REPORTS*")
-        reports = Report.query.all()
-        for report in reports:
-            print(f"Location: {report.location}, Description: {report.description}, Photo: {report.photo_file}")
-        print("-------------------\n|||||||||||||")
 
 
 if __name__ == '__main__':
     initiate_db(app)
+
+

@@ -5,7 +5,9 @@ from src.models import User
 from src.db import db
 from src.extensions import bcrypt
 
+
 auth = Blueprint('auth', __name__)
+
 
 @auth.route('/login', methods=['GET', 'POST'])
 def login():

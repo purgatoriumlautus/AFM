@@ -11,15 +11,26 @@ class User(db.Model, UserMixin):
     email = db.Column(db.String(100), nullable=False, unique=True)
     last_location = db.Column(db.String(100), nullable=True)
     is_owner = db.Column(db.Boolean, default=False)
-
+    
     # 1 user : 1 report
     report = db.relationship('Report', back_populates='creator', uselist=False)
-
-
+    
     # These are one-to-one relationships but optional
+    
     agent = db.relationship('Agent', back_populates='user', uselist=False)
     manager = db.relationship('Manager', back_populates='user', uselist=False)
+    organisation = db.relationship('Organisation',back_populates='users',uselist=False)
     organisation_id = db.Column(db.Integer, db.ForeignKey('organizations.id'))
+    
+
+
+    def __init__(self,username=None,password=None,email=None,is_owner=False,organisation_id=None):
+        self.username = username
+        self.password = password
+        self.email = email
+        self.is_owner = is_owner
+        self.organisation_id = organisation_id
+
 
 
 
@@ -55,9 +66,7 @@ class Manager(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.uid'), nullable=False)
     position = db.Column(db.String(100), nullable=False, default="Manager")
-
     user = db.relationship('User', back_populates='manager')    # One-to-One relationship
-
 
     def __repr__(self):
         return f"<Manager {self.id}, Position: {self.position}>"
@@ -74,9 +83,11 @@ class Report(db.Model):
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     is_approved = db.Column(db.Boolean, default=False, nullable=False)
     approver_id = db.Column(db.Integer, db.ForeignKey('managers.id'), nullable=True)
+    
     creator = db.relationship('User', back_populates='report')
     approver = db.relationship('Manager', backref='approved_reports')
-    def __init__(self, location, description, photo_file=None, creator_id=None, task_id=None):
+    
+    def __init__(self, location, description, photo_file=None, creator_id=None, task_id=None,approver_id = None,is_approved=False):
         self.location = location
         self.description = description
         self.photo_file = photo_file
@@ -87,11 +98,13 @@ class Report(db.Model):
     def all_reports():
         return Report.query.all()
 
+
+
 class Organisation(db.Model):
     __tablename__ = 'organizations'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
-    token = db.Column(db.String(100), unique=True, nullable=True)
+    token = db.Column(db.String(100), unique=True, nullable=True) #needed for link to invite to the org.
 
     # Relationship with users
     users = db.relationship('User', backref='organization')
@@ -99,3 +112,6 @@ class Organisation(db.Model):
 db.UniqueConstraint('organization_id', 'is_owner', name='unique_owner_organization')
 
 
+##FIX models, add relations between organisation and it's owner, 
+# fix user:organisation relationship, 
+# fix:  
