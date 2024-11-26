@@ -1,8 +1,26 @@
 import pytest
 import requests
+import subprocess
+
+@pytest.fixture(scope="session", autouse=True)
+def initialize_database():
+    """Run the initiate_db.py script inside the application container."""
+    try:
+        print("Initializing the database...")
+        result = subprocess.run(
+            ["docker", "compose", "run", "app", "python", "src/initiate_db.py"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+        print(result.stdout)
+        print(result.stderr)
+        assert result.returncode == 0, "Database initialization failed"
+    finally:
+        print("Database initialization completed. Containers will not be shut down.")
 
 @pytest.fixture(scope="session")
-def base_url():
+def base_url(initialize_database):
     """Base URL for the application."""
     return "http://localhost:5000"
 
@@ -19,12 +37,7 @@ def test_user_registration(base_url):
     response = requests.post(register_url, data=user_data)
     assert response.status_code == 200, "User registration failed"
 
-    # Step 2: Verify user exists (optional)
-    # If there's an endpoint to list users, uncomment the lines below:
-    # response = requests.get(f"{base_url}/users")
-    # assert "testuser" in response.text, "Registered user not found"
-
-    # Step 3: Clean up by deleting the user
+    # Step 2: Clean up by deleting the user
     delete_user_url = f"{base_url}/delete-user"
     delete_response = requests.post(delete_user_url, data={"username": "testuser"})
     assert delete_response.status_code == 200, "User deletion failed"
