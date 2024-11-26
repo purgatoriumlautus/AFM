@@ -7,6 +7,7 @@ from flask import  render_template,  url_for,  request, session, redirect
 from src.models import User, Report
 from werkzeug.utils import secure_filename
 from flask_bcrypt import bcrypt
+from flask import request, jsonify
 
 # REGISTER ROUTES/ENDPOINTS FOR THE URL
 
@@ -100,3 +101,15 @@ def register_routes(app,db,bcrypt):
     def view_reports():
         reports = Report.query.all()
         return render_template('reports.html', reports=reports)
+    
+    @app.route('/delete-user', methods=['POST'])
+    def delete_user():
+        """Delete a user by username."""
+        username = request.form.get('username')
+        user = User.query.filter_by(username=username).first()
+
+        if user:
+            db.session.delete(user)
+            db.session.commit()
+            return jsonify({"message": f"User {username} deleted successfully"}), 200
+        return jsonify({"error": "User not found"}), 404

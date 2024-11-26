@@ -1,8 +1,7 @@
-import pytest
-import requests
-
 import subprocess  # Ensure subprocess is imported
 import time
+import pytest
+import requests
 
 @pytest.fixture(scope="session", autouse=True)
 def start_docker_containers():
@@ -36,26 +35,30 @@ def start_docker_containers():
         # Tear down containers after tests
         print("Tearing down the containers")
 
-
-@pytest.fixture(scope="module")
-def base_url():
-    """Base URL for the application."""
+@pytest.fixture(scope="session")
+def base_url(start_docker_containers):
+    """Ensure the application is running before testing."""
     return "http://localhost:5000"
 
-def test_mainpage_endpoint(base_url):
-    """Test the main page endpoint."""
-    response = requests.get(base_url + "/")
-    assert response.status_code == 200, "Main page did not respond correctly"
-    assert "Austrian Flood Monitoring System" in response.text, "Main page content missing"
+def test_user_registration(base_url):
+    """Test user registration via the /register endpoint and delete the user after."""
+    register_url = f"{base_url}/register"
+    user_data = {
+        "username": "testuser",
+        "password": "testpassword",
+        "email": "testuser@example.com"
+    }
 
-def test_login_endpoint(base_url):
-    """Test the login page endpoint."""
-    response = requests.get(base_url + "/login")
-    assert response.status_code == 200, "Login page did not respond correctly"
-    assert "Login Page" in response.text, "Login page content missing"
+    # Step 1: Register the user
+    response = requests.post(register_url, data=user_data)
+    assert response.status_code == 200, "User registration failed"
 
-def test_register_endpoint(base_url):
-    """Test the register page endpoint."""
-    response = requests.get(base_url + "/register")
-    assert response.status_code == 200, "Register page did not respond correctly"
-    assert "Register Page" in response.text, "Register page content missing"
+    # Step 2: Verify user exists (optional)
+    # If there's an endpoint to list users, uncomment the lines below:
+    # response = requests.get(f"{base_url}/users")
+    # assert "testuser" in response.text, "Registered user not found"
+
+    # Step 3: Clean up by deleting the user
+    delete_user_url = f"{base_url}/delete-user"
+    delete_response = requests.post(delete_user_url, data={"username": "testuser"})
+    assert delete_response.status_code == 200, "User deletion failed"

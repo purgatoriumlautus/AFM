@@ -27,4 +27,4 @@ def test_containers_running():
     finally:
         # Tear down the containers after the test
         print("Tearing down the containers")
-        # subprocess.run(["docker-compose", "down"])
+
