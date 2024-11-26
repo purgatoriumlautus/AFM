@@ -3,10 +3,10 @@ name: Docker containers and Dockerfile tests
 on:
   push:
     branches:
-      - **  # Run on all branches when code is pushed
+      - '**'  # Run on all branches when code is pushed
   pull_request:
     branches:
-      - **  # Run on all branches when a pull request is opened or updated
+      - '**'  # Run on all branches when a pull request is opened or updated
 
 jobs:
   test:
