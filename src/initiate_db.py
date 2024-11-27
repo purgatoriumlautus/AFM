@@ -43,16 +43,12 @@ def initiate_db(app):
             User(username='user9', password=bcrypt.generate_password_hash('1234').decode('utf-8'), email='user9@example.com'),
             User(username='user10', password=bcrypt.generate_password_hash('1234').decode('utf-8'), email='user10@example.com'),
         ]
-        
-        
-        for c in range(1,4):
-            users[c].organisation_id = organization.id
-
-
 
         db.session.bulk_save_objects(users)
         db.session.commit()
 
+        for c in range(1,4):
+            users[c].organisation_id = organization.id
 
         # Assign roles
         manager = Manager(user_id=4, position='Manager')
@@ -60,7 +56,6 @@ def initiate_db(app):
             Agent(user_id=2, position='Support Agent'),
             Agent(user_id=3, position='Field Agent'),
         ]
-
 
         db.session.add(manager)
         db.session.bulk_save_objects(agents)

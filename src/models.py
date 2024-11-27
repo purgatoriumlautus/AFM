@@ -13,14 +13,18 @@ class User(db.Model, UserMixin):
     is_owner = db.Column(db.Boolean, default=False)
     organisation_id = db.Column(
         db.Integer,
-        db.ForeignKey('organizations.id', use_alter=True, name='fk_user_organisation_id')
+        db.ForeignKey('organizations.id', name='fk_user_organisation_id')
     )
 
     # Relationships
     report = db.relationship('Report', back_populates='creator', uselist=False)
     agent = db.relationship('Agent', back_populates='user', uselist=False)
     manager = db.relationship('Manager', back_populates='user', uselist=False)
-    organisation = db.relationship('Organisation', back_populates='users')
+    organisation = db.relationship(
+        'Organisation',
+        back_populates='users',
+        foreign_keys=[organisation_id]  # Clarifies the foreign key for this relationship
+    )
 
     __table_args__ = (
         db.UniqueConstraint('organisation_id', 'is_owner', name='unique_owner_organization'),
@@ -79,15 +83,10 @@ class Report(db.Model):
     creator_id = db.Column(db.Integer, db.ForeignKey('users.uid'), nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     is_approved = db.Column(db.Boolean, default=False, nullable=False)
-    approver_id = db.Column(
-        db.Integer,
-        db.ForeignKey('managers.id', ondelete="SET NULL"),
-        nullable=True
-    )
+    approver_id = db.Column(db.Integer, db.ForeignKey('managers.id', ondelete="SET NULL"), nullable=True)
 
     creator = db.relationship('User', back_populates='report')
     approver = db.relationship('Manager', backref='approved_reports')
-
 
     def __init__(self, location, description, photo_file=None, creator_id=None, approver_id=None, is_approved=False):
         self.location = location
@@ -109,13 +108,23 @@ class Organisation(db.Model):
     token = db.Column(db.String(100), unique=True, nullable=True)  # Link token for invites
     owner_id = db.Column(
         db.Integer,
-        db.ForeignKey('users.uid', use_alter=True, name='fk_organisation_owner_id'),
+        db.ForeignKey('users.uid', name='fk_organisation_owner_id', ondelete="CASCADE"),  # Enable CASCADE deletion
         nullable=True
     )
 
     # Relationships
-    users = db.relationship('User', back_populates='organisation', lazy='dynamic')
-    owner = db.relationship('User', foreign_keys=[owner_id], backref='owned_organization', uselist=False)
+    users = db.relationship(
+        'User',
+        back_populates='organisation',
+        foreign_keys='User.organisation_id',
+        lazy='dynamic'
+    )
+    owner = db.relationship(
+        'User',
+        foreign_keys=[owner_id],
+        backref='owned_organization',
+        uselist=False
+    )
 
     __table_args__ = (
         db.UniqueConstraint('id', name='unique_organization_id'),
