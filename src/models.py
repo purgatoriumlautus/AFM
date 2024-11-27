@@ -11,28 +11,27 @@ class User(db.Model, UserMixin):
     email = db.Column(db.String(100), nullable=False, unique=True)
     last_location = db.Column(db.String(100), nullable=True)
     is_owner = db.Column(db.Boolean, default=False)
-    
-    # 1 user : 1 report
+    organisation_id = db.Column(
+        db.Integer,
+        db.ForeignKey('organizations.id', use_alter=True, name='fk_user_organisation_id')
+    )
+
+    # Relationships
     report = db.relationship('Report', back_populates='creator', uselist=False)
-    
-    # These are one-to-one relationships but optional
-    
     agent = db.relationship('Agent', back_populates='user', uselist=False)
     manager = db.relationship('Manager', back_populates='user', uselist=False)
-    organisation = db.relationship('Organisation',back_populates='users',uselist=False)
-    organisation_id = db.Column(db.Integer, db.ForeignKey('organizations.id'))
-    
+    organisation = db.relationship('Organisation', back_populates='users')
 
+    __table_args__ = (
+        db.UniqueConstraint('organisation_id', 'is_owner', name='unique_owner_organization'),
+    )
 
-    def __init__(self,username=None,password=None,email=None,is_owner=False,organisation_id=None):
+    def __init__(self, username=None, password=None, email=None, is_owner=False, organisation_id=None):
         self.username = username
         self.password = password
         self.email = email
         self.is_owner = is_owner
         self.organisation_id = organisation_id
-
-
-
 
     def __repr__(self):
         return f'<User {self.username}>'
@@ -45,10 +44,9 @@ class User(db.Model, UserMixin):
         return User.query.all()
 
 
-
 class Agent(db.Model):
     __tablename__ = 'agents'
-    
+
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.uid'), nullable=False)
     position = db.Column(db.String(100), nullable=False, default="Agent")
@@ -59,18 +57,17 @@ class Agent(db.Model):
         return f"<Agent {self.id}, Position: {self.position}>"
 
 
-
 class Manager(db.Model):
     __tablename__ = 'managers'
-    
+
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.uid'), nullable=False)
     position = db.Column(db.String(100), nullable=False, default="Manager")
-    user = db.relationship('User', back_populates='manager')    # One-to-One relationship
+
+    user = db.relationship('User', back_populates='manager')
 
     def __repr__(self):
         return f"<Manager {self.id}, Position: {self.position}>"
-
 
 
 class Report(db.Model):
@@ -82,36 +79,47 @@ class Report(db.Model):
     creator_id = db.Column(db.Integer, db.ForeignKey('users.uid'), nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     is_approved = db.Column(db.Boolean, default=False, nullable=False)
-    approver_id = db.Column(db.Integer, db.ForeignKey('managers.id'), nullable=True)
-    
+    approver_id = db.Column(
+        db.Integer,
+        db.ForeignKey('managers.id', ondelete="SET NULL"),
+        nullable=True
+    )
+
     creator = db.relationship('User', back_populates='report')
     approver = db.relationship('Manager', backref='approved_reports')
-    
-    def __init__(self, location, description, photo_file=None, creator_id=None, task_id=None,approver_id = None,is_approved=False):
+
+
+    def __init__(self, location, description, photo_file=None, creator_id=None, approver_id=None, is_approved=False):
         self.location = location
         self.description = description
         self.photo_file = photo_file
         self.creator_id = creator_id
-        self.task_id = task_id
+        self.is_approved = is_approved
 
     @staticmethod
     def all_reports():
         return Report.query.all()
 
 
-
 class Organisation(db.Model):
     __tablename__ = 'organizations'
+
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
-    token = db.Column(db.String(100), unique=True, nullable=True) #needed for link to invite to the org.
+    token = db.Column(db.String(100), unique=True, nullable=True)  # Link token for invites
+    owner_id = db.Column(
+        db.Integer,
+        db.ForeignKey('users.uid', use_alter=True, name='fk_organisation_owner_id'),
+        nullable=True
+    )
 
-    # Relationship with users
-    users = db.relationship('User', backref='organization')
+    # Relationships
+    users = db.relationship('User', back_populates='organisation', lazy='dynamic')
+    owner = db.relationship('User', foreign_keys=[owner_id], backref='owned_organization', uselist=False)
 
-db.UniqueConstraint('organization_id', 'is_owner', name='unique_owner_organization')
+    __table_args__ = (
+        db.UniqueConstraint('id', name='unique_organization_id'),
+    )
 
-
-##FIX models, add relations between organisation and it's owner, 
-# fix user:organisation relationship, 
-# fix:  
+    def __repr__(self):
+        return f'<Organisation {self.name}>'
