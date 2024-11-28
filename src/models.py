@@ -11,6 +11,8 @@ class User(db.Model, UserMixin):
     email = db.Column(db.String(100), nullable=False, unique=True)
     last_location = db.Column(db.String(100), nullable=True)
     is_owner = db.Column(db.Boolean, default=False)
+    email_confirmed =  db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
     organisation_id = db.Column(
         db.Integer,
         db.ForeignKey('organizations.id', name='fk_user_organisation_id')
@@ -30,12 +32,14 @@ class User(db.Model, UserMixin):
         db.UniqueConstraint('organisation_id', 'is_owner', name='unique_owner_organization'),
     )
 
-    def __init__(self, username=None, password=None, email=None, is_owner=False, organisation_id=None):
+    def __init__(self, username=None, password=None, email=None, is_owner=False, organisation_id=None, email_confirmed = False, created_at = None ):
         self.username = username
         self.password = password
         self.email = email
         self.is_owner = is_owner
         self.organisation_id = organisation_id
+        self.email_confirmed = email_confirmed
+        self.created_at = created_at
 
     def __repr__(self):
         return f'<User {self.username}>'
