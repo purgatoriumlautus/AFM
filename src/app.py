@@ -53,19 +53,17 @@ def create_app():
 
     scheduler = APScheduler()
     scheduler.init_app(app)
-    @scheduler.task('interval', id='delete_unverified_users', seconds=60, misfire_grace_time=900)
+    @scheduler.task('interval', id='delete_unverified_users', hours=24, misfire_grace_time=900)
     def delete_unverified_users():
         with app.app_context():
             expiration_time = datetime.now(timezone.utc) - timedelta(days=3)
-            unverified_users = User.query.filter(
-                User.email_confirmed == False,
-                User.created_at < expiration_time
-            ).all()
-
-            for user in unverified_users:
-                db.session.delete(user)
-
+            # Efficiently delete users directly in the database
             try:
+                User.query.filter(
+                    User.email_confirmed == False,
+                    User.created_at < expiration_time
+                ).delete(synchronize_session=False)  # Skip in-memory synchronization for speed.
+
                 db.session.commit()
             except Exception as e:
                 db.session.rollback()
