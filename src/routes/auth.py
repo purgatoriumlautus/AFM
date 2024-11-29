@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
-from flask_login import login_user, logout_user
+from flask_login import login_user, logout_user, login_required, current_user
 
 from src.models import User
 from src.db import db
@@ -39,6 +39,9 @@ def logout():
     logout_user()
     flash('Signed out successfully.', 'info')
     return redirect(url_for('main.mainpage'))
+
+
+
 
 
 @auth.route("/register", methods=['GET', 'POST'])
@@ -127,3 +130,25 @@ def register_owner():
         login_user(user)
         flash('Owner account created successfully!', 'success')
         return redirect(url_for('main.mainpage'))
+
+@auth.route('/profile/<username>', methods=['GET'])
+@login_required
+def profile(username): # can be modified so that admins can see profiles of other users
+    if current_user.username != username: # if another user tries to access the profile, redirect to main page
+        flash('You are not authorized to view this profile.', 'danger')
+        return redirect(url_for('main.mainpage'))
+    return render_template('profile.html', user=current_user)
+
+@auth.route('/profile/<username>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_profile(username):
+    if current_user.username != username:
+        flash('You are not authorized to view this profile.', 'danger')
+        return redirect(url_for('main.mainpage'))
+    if request.method == 'POST':
+        current_user.username = request.form['username']
+        current_user.email = request.form['email']
+        db.session.commit()
+        flash('Profile was updated successfully!', 'success')
+        return redirect(url_for('auth.profile', username=current_user.username))
+    return render_template('edit_profile.html', user=current_user)

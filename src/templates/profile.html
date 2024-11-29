@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Profile</title>
+</head>
+<body>
+    <h1>User Profile</h1>
+    <p><strong>Username:</strong> {{ user.username }}</p>
+    <p><strong>Email:</strong> {{ user.email }}</p>
+    <p><strong>Organization:</strong> {{ user.organisation.name if user.organisation else 'None' }}</p>
+    <p><strong>Role:</strong>
+        {% if user.is_owner %}
+            Owner
+        {% elif user.manager %}
+            Manager
+        {% elif user.agent %}
+            Agent
+        {% else %}
+            User
+        {% endif %}
+    </p>
+                    {# button that redirects to edit page#}
+    <button onclick="window.location.href = '{{ url_for('auth.edit_profile', username=user.username) }}';">Edit Profile</button>
+</body>
+</html>
