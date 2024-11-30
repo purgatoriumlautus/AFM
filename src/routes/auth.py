@@ -1,13 +1,11 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_user, logout_user
-
 from src.models import User
 from src.db import db
 from src.extensions import bcrypt
-
+import re  # Import for password validation
 
 auth = Blueprint('auth', __name__)
-
 
 @auth.route('/login', methods=['GET', 'POST'])
 def login():
@@ -47,6 +45,12 @@ def register():
         password = request.form['password']
         email = request.form['email']
 
+        # Enforce password strength
+        if len(password) < 8 or not re.search(r'[A-Z]', password) or not re.search(r'[a-z]', password) or not re.search(r'[0-9]', password) or not re.search(r'[!@#$%^&*(),.?":{}|<>]', password):
+            flash('Password must be at least 8 characters long and include an uppercase letter, a lowercase letter, a digit, and a special character.', 'danger')
+            return redirect(url_for('auth.register'))
+
+        # Check if username or email already exists
         existing_user_by_username = User.query.filter_by(username=username).first()
         existing_user_by_email = User.query.filter_by(email=email).first()
 
@@ -74,6 +78,11 @@ def register_owner():
         username = request.form['username']
         password = request.form['password']
         email = request.form['email']
+
+        # Enforce password strength for owners as well
+        if len(password) < 8 or not re.search(r'[A-Z]', password) or not re.search(r'[a-z]', password) or not re.search(r'[0-9]', password) or not re.search(r'[!@#$%^&*(),.?":{}|<>]', password):
+            flash('Password must be at least 8 characters long and include an uppercase letter, a lowercase letter, a digit, and a special character.', 'danger')
+            return redirect(url_for('auth.register_owner'))
 
         existing_user_by_username = User.query.filter_by(username=username).first()
         existing_user_by_email = User.query.filter_by(email=email).first()
