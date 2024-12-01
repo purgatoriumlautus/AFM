@@ -22,21 +22,6 @@
         {% endif %}
     {% endwith %}
 </div>
-<div class="modal fade" id="signInModal" tabindex="-1" aria-labelledby="signInModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-          <h6>Sigh in</h6>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body text-center">
-          <h6 >Choose how you'd like to sign in:</h6>
-        <a href="{{ url_for('auth.register') }}" class="btn btn-dark m-2">As Public User</a>
-        <a href="{{ url_for('auth.register_owner') }}" class="btn btn-dark m-2">As Organization Owner</a>
-      </div>
-    </div>
-  </div>
-</div>
 
     <div  class="container-fluid" style="padding-right: 20%; padding-left: 20%; padding-top: 20px">
     <form id = "registerForm" class ="border rounded p-3" method="POST" action="{{ url_for('auth.login') }}" enctype="multipart/form-data">
@@ -55,7 +40,7 @@
   <button type="submit" class="btn btn-dark d-block mx-auto">Login</button>
         <br>
       <div style=" text-align: center;">
-    <a href="{{ url_for('auth.register') }}" data-bs-toggle="modal" data-bs-target="#signInModal">Don't have an account? Register here</a>
+    <a href="{{ url_for('auth.register') }}">Don't have an account? Register here</a>
 </div>
 
     </form>
