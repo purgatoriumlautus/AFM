@@ -22,10 +22,14 @@ def join_organization(token):
     if not organisation:
         flash("Invalid or expired invitation link.", "danger")
         return redirect(url_for('main.mainpage'))
+
     if current_user.organisation_id:
         flash("You are already part of an organization.", "danger")
         return redirect(url_for('main.mainpage'))
+
+    # Ensure the user is not marked as an owner
     current_user.organisation_id = organisation.id
+    current_user.is_owner = False  # Explicitly set is_owner to False
     db.session.commit()
 
     flash(f"You have successfully joined the organization '{organisation.name}'.", "success")

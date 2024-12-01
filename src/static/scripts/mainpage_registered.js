@@ -53,6 +53,10 @@ function getUserLocation() {
                 const userLng = position.coords.longitude;
                 const radius = 20;
                 showReports(userLat, userLng, radius);
+                map.flyTo([userLat, userLng], 11, {
+      animate: true,
+      duration: 1
+    });
             },
             (error) => showError(error)
         );
@@ -107,7 +111,7 @@ window.onload = function() {
     transparent: true,
     version: '1.3.0',
 
-})
+}).addTo(map)
     var hq30riskLayer = L.tileLayer.wms("https://inspire.lfrz.gv.at/000801/ows?", {
     layers: 'Hochwasserrisikogebiete HQ30',
     format: 'image/png',

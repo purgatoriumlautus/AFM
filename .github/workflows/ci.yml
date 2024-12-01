@@ -3,16 +3,10 @@ name: Docker containers and Dockerfile tests
 on:
   push:
     branches:
-      - main  # Run on push to the main branch
-      - Github-Actions  # Run on push to the Github-Actions branch
-      - reports_on_map
-      - dev
+      - '**'  # Run on all branches when code is pushed
   pull_request:
     branches:
-      - main  # Run on pull requests to the main branch
-      - Github-Actions  # Run on push to the Github-Actions branch
-      - reports_on_map
-      - dev
+      - '**'  # Run on all branches when a pull request is opened or updated
 
 jobs:
   test:
@@ -49,3 +43,9 @@ jobs:
 
     - name: Test Docker containers
       run: pytest tests/test_DockerContainers.py
+
+    - name: Test HTTP Connection
+      run: pytest tests/Test_HTTP_Endpoints.py
+
+    - name: Test Register User
+      run: pytest tests/Test_Registering_User.py

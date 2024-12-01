@@ -86,7 +86,7 @@ def create_organisation():
             return redirect(url_for('admin.admin_dashboard'))
         owner = User.query.filter_by(email=current_user.email).first()
 
-        organisation = Organisation(name=organisation_name, token=str(uuid4()))
+        organisation = Organisation(name=organisation_name, token=str(uuid4()), owner_id=owner.uid)
         db.session.add(organisation)
         db.session.commit()
 

@@ -17,7 +17,8 @@ def create_app():
     app = Flask(__name__, template_folder='templates')
     app.config['UPLOAD_FOLDER'] = 'src/static'
     #set up the db
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("FLASK_SQLALCHEMY_DATABASE_URI")
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('FLASK_SQLALCHEMY_DATABASE_URI',
+                                                      'postgresql://user:secret@localhost:5432/postgres')
     db.init_app(app)
 
     migrate = Migrate(app,db)
