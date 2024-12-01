@@ -115,6 +115,7 @@ def verify_email(user_id):
 def register_owner():
     if request.method == 'GET':
         return render_template('register_owner.html')
+    
     elif request.method == 'POST':
         username = request.form['username']
         password = request.form['password']

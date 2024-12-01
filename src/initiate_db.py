@@ -22,8 +22,8 @@ def initiate_db(app):
         print("-------------------\n|||||||||||||")
 
         # Add an organization
-        organization = Organisation(name="Example Organization", token="org_token_123")
-        db.session.add(organization)
+        organisation = Organisation(name="Example Organization", token="org_token_123")
+        db.session.add(organisation)
         db.session.commit()
 
 
@@ -73,7 +73,7 @@ def initiate_db(app):
         db.session.commit()
 
         for c in range(1,4):
-            users[c].organisation_id = organization.id
+            users[c].organisation_id = organisation.id
 
         # Assign roles
         manager = Manager(user_id=4, position='Manager')
@@ -123,7 +123,7 @@ def initiate_db(app):
 
         print('-------------------\n|||||||||||||')
         print("-------------------\n*SUCCESSFULLY POPULATED THE ORGANIZATION*")
-        print(f"Organization: {organization.name}, Token: {organization.token}")
+        print(f"Organization: {organisation.name}, Token: {organisation.token}")
         print("-------------------\n|||||||||||||")
         print("-------------------\n*SUCCESSFULLY POPULATED THE DB WITH USERS*")
         
