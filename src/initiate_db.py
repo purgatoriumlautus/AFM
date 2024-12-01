@@ -15,8 +15,8 @@ app = create_app()
 def initiate_db(app):
     with app.app_context():
         # Clear existing data
-        db.drop_all()
-        db.create_all()
+        # db.drop_all()
+        # db.create_all()
         
         print("-------------------\n*INITIALIZING THE DATABASE, POPULATING WITH DUMMY DATA*")
         print("-------------------\n|||||||||||||")
