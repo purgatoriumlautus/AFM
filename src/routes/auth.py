@@ -6,7 +6,9 @@ from src.db import db
 from src.extensions import bcrypt
 
 
+
 auth = Blueprint('auth', __name__)
+
 
 
 @auth.route('/login', methods=['GET', 'POST'])
@@ -29,6 +31,7 @@ def login():
     else:
         flash('Password is incorrect.', 'danger')
         return redirect(url_for('auth.login'))
+
 
 
 @auth.route('/logout')
@@ -66,6 +69,7 @@ def register():
         return redirect(url_for('main.mainpage'))
 
 
+
 @auth.route("/register_owner", methods=['GET', 'POST'])
 def register_owner():
     if request.method == 'GET':
@@ -85,6 +89,7 @@ def register_owner():
             flash('Email already exists! Please log in.', 'danger')
             return redirect(url_for('auth.login'))
 
+
         hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
         user = User(username=username, password=hashed_password, email=email, is_owner=True)
         db.session.add(user)
@@ -92,3 +97,4 @@ def register_owner():
         login_user(user)
         flash('Owner account created successfully!', 'success')
         return redirect(url_for('main.mainpage'))
+

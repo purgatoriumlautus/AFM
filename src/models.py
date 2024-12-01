@@ -11,12 +11,15 @@ class User(db.Model, UserMixin):
     email = db.Column(db.String(100), nullable=False, unique=True)
     last_location = db.Column(db.String(100), nullable=True)
     is_owner = db.Column(db.Boolean, default=False)
-    
+
+
+
     # 1 user : 1 report
     report = db.relationship('Report', back_populates='creator', uselist=False)
     
+
     # These are one-to-one relationships but optional
-    
+
     agent = db.relationship('Agent', back_populates='user', uselist=False)
     manager = db.relationship('Manager', back_populates='user', uselist=False)
     organisation = db.relationship('Organisation',back_populates='users',uselist=False)
@@ -30,8 +33,6 @@ class User(db.Model, UserMixin):
         self.email = email
         self.is_owner = is_owner
         self.organisation_id = organisation_id
-
-
 
 
     def __repr__(self):
@@ -105,11 +106,12 @@ class Organisation(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     token = db.Column(db.String(100), unique=True, nullable=True) #needed for link to invite to the org.
-
     # Relationship with users
     users = db.relationship('User', backref='organization')
 
+
 db.UniqueConstraint('organization_id', 'is_owner', name='unique_owner_organization')
+
 
 
 ##FIX models, add relations between organisation and it's owner, 

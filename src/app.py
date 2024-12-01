@@ -19,6 +19,7 @@ def create_app():
     #set up the db
     app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("FLASK_SQLALCHEMY_DATABASE_URI")
     db.init_app(app)
+
     migrate = Migrate(app,db)
     
 
@@ -37,8 +38,9 @@ def create_app():
     app.register_blueprint(report)
     app.register_blueprint(task)
     app.register_blueprint(admin)
-    
-    
+
+
+
     @login_manager.user_loader
     def load_user(user_id):
         return User.query.get(int(user_id))
