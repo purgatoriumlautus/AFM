@@ -5,7 +5,7 @@ const austriaBounds = L.latLngBounds(
 
 var map = L.map('map', {
     minZoom: 7,
-    maxZoom: 13,
+    maxZoom: 16,
     maxBounds: austriaBounds,
     maxBoundsViscosity: 1.0
 }).setView([47.5162, 14.5501], 7);
