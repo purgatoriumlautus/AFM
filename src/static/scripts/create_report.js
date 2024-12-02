@@ -16,44 +16,65 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 
 var marker = L.marker([47.5162, 14.5501]).addTo(map);
 
-function geocodeAddress(street, zipcode, country) {
-    var url = `https://nominatim.openstreetmap.org/search?street=${street}&postalcode=${zipcode}&country=${country}&countrycodes=AT&format=json&limit=1`;
+function debounce(func, delay) {
+    let timeout;
+    return function (...args) {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(this, args), delay);
+    };
+}
+
+function geocodeAddress(street, zipcode, country, callback) {
+    const url = `https://nominatim.openstreetmap.org/search?street=${street}&postalcode=${zipcode}&country=${country}&countrycodes=AT&format=json&limit=1`;
 
     fetch(url)
-        .then(response => response.json())
-        .then(data => {
+        .then((response) => response.json())
+        .then((data) => {
             if (data.length > 0) {
-                var lat = data[0].lat;
-                var lon = data[0].lon;
+                const lat = data[0].lat;
+                const lon = data[0].lon;
                 document.getElementById("location").value = `${lat},${lon}`;
                 marker.setLatLng([lat, lon]);
                 map.setView([lat, lon], 13);
+
+                if (callback) callback();
             } else {
                 alert("Location not found. Please check your input.");
             }
         })
-        .catch(error => console.error("Error geocoding address:", error));
+        .catch((error) => console.error("Error geocoding address:", error));
 }
 
-document.getElementById("reportForm").addEventListener("submit", function(e) {
-    var street = document.getElementById("street").value;
-    var zipcode = document.getElementById("zipcode").value;
-    var country = "Austria";
-    geocodeAddress(street, zipcode, country);
-});
+const updateMap = debounce(() => {
+    const street = document.getElementById("street").value;
+    const zipcode = document.getElementById("zipcode").value;
+    const country = "Austria";
+
+    if (street && zipcode) {
+        geocodeAddress(street, zipcode, country);
+    }
+}, 800);
+
 
 document.getElementById("street").addEventListener("input", updateMap);
 document.getElementById("zipcode").addEventListener("input", updateMap);
 
-function updateMap() {
-    var street = document.getElementById("street").value;
-    var zipcode = document.getElementById("zipcode").value;
-    var country = "Austria";
 
-    if (street && zipcode && country) {
-        geocodeAddress(street, zipcode, country);
+document.getElementById("reportForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+
+    const street = document.getElementById("street").value;
+    const zipcode = document.getElementById("zipcode").value;
+    const country = "Austria";
+
+    if (street && zipcode) {
+        geocodeAddress(street, zipcode, country, () => {
+            document.getElementById("reportForm").submit();
+        });
+    } else {
+        alert("Please fill in both street and zipcode.");
     }
-}
+});
 
 map.on('click', function(e) {
     var lat = e.latlng.lat;
