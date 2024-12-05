@@ -32,7 +32,7 @@ def test_register_and_login_user(base_url):
     
     user_data = {
         "username": "testuser",
-        "password": "testpassword",
+        "password": "T3stP@ssw0rd!",
         "email": "testuser@example.com"
     }
 
