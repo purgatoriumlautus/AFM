@@ -15,7 +15,7 @@ app = create_app()
 def initiate_db(app):
     with app.app_context():
         # Clear existing data
-        # db.drop_all()
+        db.drop_all()
         db.create_all()
         
         print("-------------------\n*INITIALIZING THE DATABASE, POPULATING WITH DUMMY DATA*")
@@ -92,6 +92,18 @@ def initiate_db(app):
         db.session.add(manager)
         db.session.bulk_save_objects(agents)
         db.session.commit()
+        # Add a superadmin user
+        superadmin_user = User(
+            username='superadmin',
+            password=bcrypt.generate_password_hash('superadmin').decode('utf-8'),
+            email='superadmin@example.com',
+            is_superadmin=True,
+            email_confirmed=True
+        )
+        db.session.add(superadmin_user)
+        db.session.commit()
+
+        print(f"Superadmin created: {superadmin_user.username}, Email: {superadmin_user.email}")
 
 
         # Add reports

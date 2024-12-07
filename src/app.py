@@ -11,6 +11,7 @@ from src.routes.main import main
 from src.routes.reports import report
 from src.routes.tasks import task
 from src.routes.admin import admin
+from src.routes.superadmin import superadmin
 from flask import current_app
 from flask_apscheduler import APScheduler
 from datetime import datetime, timedelta, timezone
@@ -51,6 +52,8 @@ def create_app():
     app.register_blueprint(report)
     app.register_blueprint(task)
     app.register_blueprint(admin)
+    app.register_blueprint(superadmin)
+
 
     scheduler = APScheduler()
     scheduler.init_app(app)

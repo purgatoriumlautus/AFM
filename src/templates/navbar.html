@@ -14,7 +14,7 @@
       <li class="nav-item active">
         <a class="nav-link m" href="{{ url_for('main.mainpage') }}">Map</a>
       </li>
-        {% if current_user.is_authenticated and not current_user.agent and not  current_user.manager and not current_user.is_owner%}
+        {% if current_user.is_authenticated and not current_user.agent and not  current_user.manager and not current_user.is_owner and not current_user.superadmin%}
         <li class="nav-item active">
           <a class="nav-link r" href="{{ url_for('report.create_report') }}">Report</a>
         </li>
@@ -24,6 +24,11 @@
           <a class="nav-link vr" href="{{ url_for('report.view_reports') }}">Reports</a>
         </li>
         {% endif %}
+    {% if current_user.is_superadmin %}
+                        <li class="nav-item active">
+                            <a class="nav-link" href="{{ url_for('superadmin.superadmin_dashboard') }}">Superadmin</a>
+                        </li>
+                    {% endif %}
          {% if current_user.is_authenticated%}
         <li class="nav-item active">
           <a class="nav-link p" href="{{ url_for('auth.profile', username=current_user.username) }}">Profile</a>

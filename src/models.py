@@ -17,6 +17,7 @@ class User(db.Model, UserMixin):
         db.Integer,
         db.ForeignKey('organisations.id', name='fk_user_organisation_id',ondelete='SET NULL'),
     )
+    is_superadmin = db.Column(db.Boolean, default=False)
 
     # Relationships
     report = db.relationship('Report', back_populates='creator', uselist=False)
@@ -34,7 +35,8 @@ class User(db.Model, UserMixin):
     #     db.UniqueConstraint('organisation_id', 'is_owner', name='unique_owner_organisation'),
     # )
 
-    def __init__(self, username=None, password=None, email=None, is_owner=False, organisation_id=None, email_confirmed = False, created_at = None ):
+    def __init__(self, username=None, password=None, email=None, is_owner=False, organisation_id=None,
+                 email_confirmed=False, created_at=None, is_superadmin=False):
         self.username = username
         self.password = password
         self.email = email
@@ -42,6 +44,7 @@ class User(db.Model, UserMixin):
         self.organisation_id = organisation_id
         self.email_confirmed = email_confirmed
         self.created_at = created_at
+        self.is_superadmin = is_superadmin
 
     def __repr__(self):
         return f'<User {self.username}>'
