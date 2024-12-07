@@ -16,7 +16,7 @@ def initiate_db(app):
     with app.app_context():
         # Clear existing data
         # db.drop_all()
-        # db.create_all()
+        db.create_all()
         
         print("-------------------\n*INITIALIZING THE DATABASE, POPULATING WITH DUMMY DATA*")
         print("-------------------\n|||||||||||||")
@@ -29,6 +29,9 @@ def initiate_db(app):
 
         # Add users
         users = [
+            User(username='owner123', password=bcrypt.generate_password_hash('owner123').decode('utf-8'),
+                         email='owner@example.com', is_owner=True, organisation_id=organisation.id,
+                         email_confirmed=True),
             User(username='admin', password=bcrypt.generate_password_hash('1').decode('utf-8'), email='123@example.com',
                  is_owner=True, created_at=datetime.now(timezone.utc) - timedelta(days=1), email_confirmed=True),
             User(username='agent1', password=bcrypt.generate_password_hash('agent123').decode('utf-8'),
@@ -67,6 +70,7 @@ def initiate_db(app):
             User(username='user10', password=bcrypt.generate_password_hash('1234').decode('utf-8'),
                  email='user10@example.com', created_at=datetime.now(timezone.utc) - timedelta(days=20),
                  email_confirmed=True),
+
         ]
 
         db.session.bulk_save_objects(users)
@@ -151,5 +155,6 @@ def initiate_db(app):
 
 if __name__ == '__main__':
     initiate_db(app)
+
 
 

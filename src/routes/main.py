@@ -27,6 +27,10 @@ def join_organization(token):
         flash("You are already part of an organization.", "danger")
         return redirect(url_for('main.mainpage'))
 
+    if current_user.is_owner:
+        flash("You are already the owner of an organization.", "danger")
+        return redirect(url_for('main.mainpage'))
+
     # Ensure the user is not marked as an owner
     current_user.organisation_id = organisation.id
     current_user.is_owner = False  # Explicitly set is_owner to False

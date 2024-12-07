@@ -59,9 +59,14 @@
                         <td>
                             <form method="POST" action="{{ url_for('admin.admin_dashboard') }}">
                                 <input type="hidden" name="user_id" value="{{ user.uid }}">
-                                <div class="btn-group">
-                                    <button type="submit" name="role" value="agent" class="btn btn-primary btn-sm">Assign Agent</button>
-                                    <button type="submit" name="role" value="manager" class="btn btn-warning btn-sm">Assign Manager</button>
+                                <div class="dropdown">
+                                    <button class="btn btn-secondary dropdown-toggle btn-sm" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+                                        Assign Role
+                                    </button>
+                                    <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                                        <li><button class="dropdown-item" type="submit" name="role" value="agent">Assign Agent</button></li>
+                                        <li><button class="dropdown-item" type="submit" name="role" value="manager">Assign Manager</button></li>
+                                    </ul>
                                 </div>
                             </form>
                         </td>

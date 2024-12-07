@@ -27,10 +27,12 @@ class User(db.Model, UserMixin):
         back_populates='users',
         foreign_keys=[organisation_id]  # Clarifies the foreign key for this relationship
     )
+    # Removed unique constraint on organisation_id and is_owner because it prevents multiple users from
+    # being part of the same organisation
 
-    __table_args__ = (
-        db.UniqueConstraint('organisation_id', 'is_owner', name='unique_owner_organisation'),
-    )
+    # __table_args__ = (
+    #     db.UniqueConstraint('organisation_id', 'is_owner', name='unique_owner_organisation'),
+    # )
 
     def __init__(self, username=None, password=None, email=None, is_owner=False, organisation_id=None, email_confirmed = False, created_at = None ):
         self.username = username
