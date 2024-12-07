@@ -21,10 +21,13 @@ def initiate_db(app):
         print("-------------------\n*INITIALIZING THE DATABASE, POPULATING WITH DUMMY DATA*")
         print("-------------------\n|||||||||||||")
 
-        # Add an organization
-        organisation = Organisation(name="Example Organization", token="org_token_123")
-        db.session.add(organisation)
-        db.session.commit()
+        # Check if the organization already exists
+        organisation = Organisation.query.filter_by(token="org_token_123").first()
+        if not organisation:
+            # Add an organization
+            organisation = Organisation(name="Example Organization", token="org_token_123")
+            db.session.add(organisation)
+            db.session.commit()
 
 
         # Add users
