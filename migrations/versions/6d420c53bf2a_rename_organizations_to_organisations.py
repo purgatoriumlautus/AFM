@@ -36,8 +36,9 @@ def upgrade():
     with op.batch_alter_table('users', schema=None) as batch_op:
         # Check and create the unique constraint if it does not exist
         existing_constraints = sa.inspect(op.get_bind()).get_unique_constraints('users')
-        if not any(c['name'] == 'unique_owner_organisation' for c in existing_constraints):
-            batch_op.create_unique_constraint('unique_owner_organisation', ['organisation_id', 'is_owner'])
+        if any(c['name'] == 'unique_owner_organisation' for c in existing_constraints):
+            batch_op.drop_constraint('unique_owner_organisation', type_='unique')
+        batch_op.create_unique_constraint('unique_owner_organisation', ['organisation_id', 'is_owner'])
 
         # Check and create the foreign key if it does not exist
         existing_foreign_keys = sa.inspect(op.get_bind()).get_foreign_keys('users')
@@ -52,22 +53,36 @@ def upgrade():
 
 
 def downgrade():
+    # Drop foreign key constraint in 'users'
     with op.batch_alter_table('users', schema=None) as batch_op:
         batch_op.drop_constraint('fk_user_organisation_id', type_='foreignkey')
         batch_op.drop_constraint('unique_owner_organisation', type_='unique')
 
-    op.create_table('organizations',
-    sa.Column('id', sa.INTEGER(), autoincrement=True, nullable=False),
-    sa.Column('name', sa.VARCHAR(length=100), autoincrement=False, nullable=False),
-    sa.Column('token', sa.VARCHAR(length=100), autoincrement=False, nullable=True),
-    sa.Column('owner_id', sa.INTEGER(), autoincrement=False, nullable=True),
-    sa.ForeignKeyConstraint(['owner_id'], ['users.uid'], name='fk_organisation_owner_id', ondelete='CASCADE'),
-    sa.PrimaryKeyConstraint('id', name='unique_organization_id'),
-    sa.UniqueConstraint('token', name='organizations_token_key')
+    # Nullify or update the 'organisation_id' column in 'users' to prevent violations
+    op.execute('UPDATE users SET organisation_id = NULL')
+
+    # Recreate the 'organizations' table
+    op.create_table(
+        'organizations',
+        sa.Column('id', sa.INTEGER(), autoincrement=True, nullable=False),
+        sa.Column('name', sa.VARCHAR(length=100), autoincrement=False, nullable=False),
+        sa.Column('token', sa.VARCHAR(length=100), autoincrement=False, nullable=True),
+        sa.Column('owner_id', sa.INTEGER(), autoincrement=False, nullable=True),
+        sa.ForeignKeyConstraint(['owner_id'], ['users.uid'], name='fk_organisation_owner_id', ondelete='CASCADE'),
+        sa.PrimaryKeyConstraint('id', name='unique_organization_id'),
+        sa.UniqueConstraint('token', name='organizations_token_key')
     )
 
-    op.execute('DROP TABLE organisations CASCADE')
+    # Drop the 'organisations' table
+    op.execute('DROP TABLE IF EXISTS organisations CASCADE')
 
+    # Restore foreign key constraints in 'users'
     with op.batch_alter_table('users', schema=None) as batch_op:
+        batch_op.create_foreign_key(
+            'fk_user_organisation_id',
+            'organizations',
+            ['organisation_id'],
+            ['id'],
+            ondelete='SET NULL'
+        )
         batch_op.create_unique_constraint('unique_owner_organisation', ['organisation_id', 'is_owner'])
-        batch_op.create_foreign_key('fk_user_organisation_id', 'organizations', ['organisation_id'], ['id'], ondelete='SET NULL')

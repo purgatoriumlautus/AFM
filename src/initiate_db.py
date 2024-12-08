@@ -36,7 +36,7 @@ def initiate_db(app):
                          email='owner@example.com', is_owner=True, organisation_id=organisation.id,
                          email_confirmed=True),
             User(username='admin', password=bcrypt.generate_password_hash('1').decode('utf-8'), email='123@example.com',
-                 is_owner=True, created_at=datetime.now(timezone.utc) - timedelta(days=1), email_confirmed=True),
+                 is_owner=True, created_at=datetime.now(timezone.utc) - timedelta(days=1), email_confirmed=True, is_superadmin=True),
             User(username='agent1', password=bcrypt.generate_password_hash('agent123').decode('utf-8'),
                  email='agent1@example.com', created_at=datetime.now(timezone.utc) - timedelta(days=5),
                  email_confirmed=True),

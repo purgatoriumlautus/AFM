@@ -11,13 +11,13 @@ class User(db.Model, UserMixin):
     email = db.Column(db.String(100), nullable=False, unique=True)
     last_location = db.Column(db.String(100), nullable=True)
     is_owner = db.Column(db.Boolean, default=False)
-    email_confirmed =  db.Column(db.Boolean, default=False)
+    email_confirmed = db.Column(db.Boolean, default=False)
+    is_superadmin = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     organisation_id = db.Column(
         db.Integer,
         db.ForeignKey('organisations.id', name='fk_user_organisation_id',ondelete='SET NULL'),
     )
-    is_superadmin = db.Column(db.Boolean, default=False)
 
     # Relationships
     report = db.relationship('Report', back_populates='creator', uselist=False)
@@ -28,12 +28,10 @@ class User(db.Model, UserMixin):
         back_populates='users',
         foreign_keys=[organisation_id]  # Clarifies the foreign key for this relationship
     )
-    # Removed unique constraint on organisation_id and is_owner because it prevents multiple users from
-    # being part of the same organisation
 
-    # __table_args__ = (
-    #     db.UniqueConstraint('organisation_id', 'is_owner', name='unique_owner_organisation'),
-    # )
+    __table_args__ = (
+        db.UniqueConstraint('organisation_id', 'is_owner', name='unique_owner_organisation'),
+    )
 
     def __init__(self, username=None, password=None, email=None, is_owner=False, organisation_id=None,
                  email_confirmed=False, created_at=None, is_superadmin=False):
