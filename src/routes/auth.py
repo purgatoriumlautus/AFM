@@ -5,9 +5,15 @@ from src.db import db
 from src.extensions import bcrypt,mail
 from flask_mail import Mail, Message
 import re  # Import for password validation
-
+import os
 
 auth = Blueprint('auth', __name__)
+
+def is_super_admin():
+    sup_email = os.getenv('ADMIN_EMAIL')
+    return sup_email == current_user.email
+
+
 
 @auth.route('/login', methods=['GET', 'POST'])
 def login():
@@ -151,7 +157,8 @@ def profile(username): # can be modified so that admins can see profiles of othe
     if current_user.username != username: # if another user tries to access the profile, redirect to main page
         flash('You are not authorized to view this profile.', 'danger')
         return redirect(url_for('main.mainpage'))
-    return render_template('profile.html', user=current_user)
+    return render_template('profile.html', user=current_user,is_super_admin=is_super_admin())
+
 
 @auth.route('/profile/<username>/edit', methods=['GET', 'POST'])
 @login_required
@@ -164,6 +171,6 @@ def edit_profile(username):
         current_user.email = request.form['email']
         db.session.commit()
         flash('Profile was updated successfully!', 'success')
-        return redirect(url_for('auth.profile', username=current_user.username))
-    return render_template('edit_profile.html', user=current_user)
+        return redirect(url_for('auth.profile', username=current_user.username,is_super_admin=is_super_admin()))
+    return render_template('edit_profile.html', user=current_user,is_super_admin=is_super_admin())
 

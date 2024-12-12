@@ -8,3 +8,5 @@ from flask_mail import Mail, Message
 bcrypt = Bcrypt()
 login_manager = LoginManager()
 mail = Mail()
+
+

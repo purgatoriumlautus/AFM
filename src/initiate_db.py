@@ -8,6 +8,8 @@ from src.db import db
 from src.models import User, Report,Agent,Manager,Organisation
 from src.extensions import bcrypt
 from datetime import datetime, timedelta, timezone
+import os
+
 
 app = create_app()
 
@@ -35,8 +37,6 @@ def initiate_db(app):
             User(username='owner123', password=bcrypt.generate_password_hash('owner123').decode('utf-8'),
                          email='owner@example.com', is_owner=True, organisation_id=organisation.id,
                          email_confirmed=True),
-            User(username='admin', password=bcrypt.generate_password_hash('1').decode('utf-8'), email='123@example.com',
-                 is_owner=True, created_at=datetime.now(timezone.utc) - timedelta(days=1), email_confirmed=True, is_superadmin=True),
             User(username='agent1', password=bcrypt.generate_password_hash('agent123').decode('utf-8'),
                  email='agent1@example.com', created_at=datetime.now(timezone.utc) - timedelta(days=5),
                  email_confirmed=True),
@@ -94,10 +94,9 @@ def initiate_db(app):
         db.session.commit()
         # Add a superadmin user
         superadmin_user = User(
-            username='superadmin',
-            password=bcrypt.generate_password_hash('superadmin').decode('utf-8'),
-            email='superadmin@example.com',
-            is_superadmin=True,
+            username='admin',
+            password=bcrypt.generate_password_hash('1').decode('utf-8'),
+            email=os.getenv('ADMIN_EMAIL'),
             email_confirmed=True
         )
         db.session.add(superadmin_user)
