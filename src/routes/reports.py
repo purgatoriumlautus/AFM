@@ -8,7 +8,6 @@ from werkzeug.utils import secure_filename
 import os
 
 
-
 report = Blueprint("report",__name__)
 
 
@@ -35,6 +34,7 @@ def create_report():
     return redirect(url_for('main.mainpage'))
 
 
+
 @report.route('/view_reports', methods=['GET'])
 @login_required
 def view_reports():
@@ -47,25 +47,25 @@ def view_reports():
         return render_template('reports.html', reports=reports)
 
 
+
 @report.route('/view_reports/<int:report_id>', methods=['GET', 'POST'])
 @login_required
 def manage_report(report_id):
     report = Report.query.get_or_404(report_id)
-
     # Check if the user is a manager
     manager = Manager.query.filter_by(user_id=current_user.uid).first()
-
     if request.method == 'POST':
         if not manager:
             flash('Access denied. Only managers can manage reports.', 'error')
             return redirect(url_for('main.mainpage'))
-
         action = request.form.get('action')
+        
         if action == 'approve':
             report.is_approved = True
             report.approver_id = manager.id
             db.session.commit()
             flash('Report approved successfully.', 'success')
+        
         elif action == 'delete':
             db.session.delete(report)
             db.session.commit()

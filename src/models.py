@@ -11,9 +11,12 @@ class User(db.Model, UserMixin):
     email = db.Column(db.String(100), nullable=False, unique=True)
     last_location = db.Column(db.String(100), nullable=True)
     is_owner = db.Column(db.Boolean, default=False)
+    email_confirmed = db.Column(db.Boolean, default=False)
+    is_superadmin = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
     organisation_id = db.Column(
         db.Integer,
-        db.ForeignKey('organizations.id', name='fk_user_organisation_id')
+        db.ForeignKey('organisations.id', name='fk_user_organisation_id',ondelete='SET NULL'),
     )
 
     # Relationships
@@ -27,15 +30,19 @@ class User(db.Model, UserMixin):
     )
 
     __table_args__ = (
-        db.UniqueConstraint('organisation_id', 'is_owner', name='unique_owner_organization'),
+        db.UniqueConstraint('organisation_id', 'is_owner', name='unique_owner_organisation'),
     )
 
-    def __init__(self, username=None, password=None, email=None, is_owner=False, organisation_id=None):
+    def __init__(self, username=None, password=None, email=None, is_owner=False, organisation_id=None,
+                 email_confirmed=False, created_at=None, is_superadmin=False):
         self.username = username
         self.password = password
         self.email = email
         self.is_owner = is_owner
         self.organisation_id = organisation_id
+        self.email_confirmed = email_confirmed
+        self.created_at = created_at
+        self.is_superadmin = is_superadmin
 
     def __repr__(self):
         return f'<User {self.username}>'
@@ -101,7 +108,7 @@ class Report(db.Model):
 
 
 class Organisation(db.Model):
-    __tablename__ = 'organizations'
+    __tablename__ = 'organisations'
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
@@ -122,12 +129,12 @@ class Organisation(db.Model):
     owner = db.relationship(
         'User',
         foreign_keys=[owner_id],
-        backref='owned_organization',
+        backref='owned_organisation',
         uselist=False
     )
 
     __table_args__ = (
-        db.UniqueConstraint('id', name='unique_organization_id'),
+        db.UniqueConstraint('id', name='unique_organisation_id'),
     )
 
     def __repr__(self):

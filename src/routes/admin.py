@@ -6,6 +6,7 @@ from src.db import db
 
 admin = Blueprint('admin', __name__)
 
+
 @admin.route('/admin', methods=['GET', 'POST'])
 @login_required
 def admin_dashboard():
