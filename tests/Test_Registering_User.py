@@ -4,20 +4,48 @@ import subprocess
 from src.models import User
 from src.app import create_app
 
-@pytest.fixture(scope="session", autouse=True)
-def initialize_database():
-    """Run the initiate_db.py script inside the application container."""
+def run_docker_command(cmd):
+    """
+    Helper function to execute a Docker command and return the result.
+    Tries to run the command and handles exceptions like FileNotFoundError.
+    """
     try:
-        print("Initializing the database...")
         result = subprocess.run(
-            ["docker", "compose", "run", "app", "python", "src/initiate_db.py"],
+            cmd,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,
         )
-        print(result.stdout)
-        print(result.stderr)
-        assert result.returncode == 0, "Database initialization failed"
+        return result
+    except FileNotFoundError:
+        return None
+
+@pytest.fixture(scope="session", autouse=True)
+def initialize_database():
+    """Run the initiate_db.py script inside the application container with a fallback for docker-compose."""
+    try:
+        print("Initializing the database...")
+
+        # Define commands for modern and legacy Docker Compose
+        docker_compose_cmd = ["docker", "compose", "run", "app", "python", "src/initiate_db.py"]
+        docker_compose_legacy_cmd = ["docker-compose", "run", "app", "python", "src/initiate_db.py"]
+
+        # Try modern Docker Compose command first
+        result = run_docker_command(docker_compose_cmd)
+        if not result or result.returncode != 0:
+            print("`docker compose` failed. Trying `docker-compose` as fallback...")
+            # Fallback to legacy Docker Compose command
+            result = run_docker_command(docker_compose_legacy_cmd)
+
+        # Log outputs for debugging
+        if result:
+            print(f"Command: {' '.join(result.args)}")
+            print(f"Return Code: {result.returncode}")
+            print(f"Stdout: {result.stdout}")
+            print(f"Stderr: {result.stderr}")
+            assert result.returncode == 0, "Database initialization failed"
+        else:
+            raise RuntimeError("Both `docker compose` and `docker-compose` commands failed to execute.")
     finally:
         print("Database initialization completed. Containers will not be shut down.")
 
@@ -36,7 +64,7 @@ def test_register_and_login_user():
 
     user_data = {
         "username": "testuser",
-        "password": "Testpassword1!",
+        "password": "T3stP@ssw0rd!",
         "email": "testuser@example.com"
     }
 
