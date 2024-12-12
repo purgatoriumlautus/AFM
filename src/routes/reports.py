@@ -8,6 +8,12 @@ from werkzeug.utils import secure_filename
 import os
 
 
+def is_super_admin():
+    super_admin_mail = os.getenv("ADMIN_EMAIL")
+    return super_admin_mail == current_user.email
+
+
+
 report = Blueprint("report",__name__)
 
 
@@ -15,7 +21,7 @@ report = Blueprint("report",__name__)
 @login_required
 def create_report():
     if request.method == "GET":
-        return(render_template('report.html'))
+        return(render_template('report.html',is_super_admin=is_super_admin()))
     location = request.form.get('location')
     description = request.form.get('description')
     photo = request.files.get('photo')
@@ -31,6 +37,7 @@ def create_report():
     report = Report(location=location, description=description,photo_file=filename,creator_id=user_id)
     db.session.add(report)
     db.session.commit()
+    flash("Report successfully created",'success')
     return redirect(url_for('main.mainpage'))
 
 
@@ -38,13 +45,14 @@ def create_report():
 @report.route('/view_reports', methods=['GET'])
 @login_required
 def view_reports():
+    super_admin = is_super_admin()
     manager = Manager.query.filter_by(user_id=current_user.uid).first()
-    if not manager:
-        flash('Access denied. Only managers can manage reports.', 'error')
-        return redirect(url_for('main.mainpage'))
-    else:
+    if manager or super_admin:
         reports = Report.query.all()  # Optionally filter based on approval status
-        return render_template('reports.html', reports=reports)
+        return render_template('reports.html', reports=reports,is_super_admin=super_admin)
+    else:
+        flash(f'Access denied. Only managers can manage reports is', 'error')
+        return redirect(url_for('main.mainpage'))
 
 
 
@@ -52,12 +60,14 @@ def view_reports():
 @login_required
 def manage_report(report_id):
     report = Report.query.get_or_404(report_id)
+    super_admin = is_super_admin()
     # Check if the user is a manager
     manager = Manager.query.filter_by(user_id=current_user.uid).first()
     if request.method == 'POST':
-        if not manager:
+        if manager or super_admin:
             flash('Access denied. Only managers can manage reports.', 'error')
             return redirect(url_for('main.mainpage'))
+        
         action = request.form.get('action')
         
         if action == 'approve':
@@ -72,4 +82,4 @@ def manage_report(report_id):
             flash('Report deleted successfully.', 'success')
         return redirect(url_for('report.view_reports'))
 
-    return render_template('report_details.html', report=report, manager=manager)
+    return render_template('report_details.html', report=report, manager=manager,is_super_admin=is_super_admin())

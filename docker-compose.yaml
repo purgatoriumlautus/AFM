@@ -9,6 +9,7 @@ services:
     environment:
       FLASK_SQLALCHEMY_DATABASE_URI: postgresql://user:secret@db:5432/postgres
       FLASK_DEBUG: 1
+      ADMIN_EMAIL: admin@email.com
     command: flask run -h 0.0.0.0
 
 

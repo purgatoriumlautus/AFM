@@ -56,7 +56,7 @@
 
 </script>
 
-{% if current_user.agent or current_user.manager or current_user.is_owner %}
+{% if current_user.agent or current_user.manager or current_user.is_owner  %}
 <script src="{{ url_for('static', filename='scripts/mainpage_manager.js') }}"></script>
 {% elif current_user.is_authenticated %}
     <script src="{{ url_for('static', filename='scripts/mainpage_registered.js') }}"></script>

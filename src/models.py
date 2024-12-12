@@ -1,6 +1,9 @@
 from flask_login import UserMixin
 from src.db import db
 from datetime import datetime
+import os
+
+sup_email = os.getenv("ADMIN_EMAIL")
 
 
 class User(db.Model, UserMixin):
@@ -9,10 +12,9 @@ class User(db.Model, UserMixin):
     username = db.Column(db.String(100), nullable=False)
     password = db.Column(db.String(255), nullable=False)
     email = db.Column(db.String(100), nullable=False, unique=True)
-    last_location = db.Column(db.String(100), nullable=True)
+    home_address = db.Column(db.String(100), nullable=True)
     is_owner = db.Column(db.Boolean, default=False)
     email_confirmed = db.Column(db.Boolean, default=False)
-    is_superadmin = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     organisation_id = db.Column(
         db.Integer,
@@ -54,6 +56,9 @@ class User(db.Model, UserMixin):
     def all_users():
         return User.query.all()
 
+    def is_super_admin(self):
+        return self.email == sup_email
+        
 
 class Agent(db.Model):
     __tablename__ = 'agents'
@@ -77,6 +82,8 @@ class Manager(db.Model):
 
     user = db.relationship('User', back_populates='manager')
 
+    
+    
     def __repr__(self):
         return f"<Manager {self.id}, Position: {self.position}>"
 
