@@ -7,7 +7,8 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css">
-    <title>Main Page</title>
+<link href="https://cdn.jsdelivr.net/gh/aazuspan/leaflet-feature-legend/src/feature-legend.css" rel="stylesheet" />
+   <title>Main Page</title>
     <style>
         .navbar .nav-link.m {
           color: #4e8fcc; background-color: #d7e1f3
@@ -20,7 +21,10 @@
             width: 100%;
             height: 90%;
         }
+
     </style>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.7.2/proj4.js"></script>
 </head>
 
 <body>
@@ -42,27 +46,31 @@
 <script>
 
     var reports = [];
+   const currentUser = {
+        id: "{{ current_user.uid }}"
+    };
     {% for report in reports %}
-        {% if report.is_approved %}
             var reportdet = {
             id: "{{ report.id }}",
             location: "{{ report.location }}",
             description: "{{ report.description }}",
-            photo_file: "{{ report.photo_file if report.photo_file else '' }}"
+            photo_file: "{{ report.photo_file if report.photo_file else '' }}",
+                creator_id:"{{ report.creator_id }}"
         };
         reports.push(reportdet);
-        {% endif %}
     {% endfor %}
 
-</script>
 
+</script>
 {% if current_user.agent or current_user.manager or current_user.is_owner %}
 <script src="{{ url_for('static', filename='scripts/mainpage_manager.js') }}"></script>
 {% elif current_user.is_authenticated %}
-    <script src="{{ url_for('static', filename='scripts/mainpage_registered.js') }}"></script>
+    <script type = "module" src="{{ url_for('static', filename='scripts/mainpage_registered.js') }}"></script>
     {% else %}
 <script src="{{ url_for('static', filename='scripts/mainpage_user.js') }}"></script> <!-- based on location displayes reports -->
 {% endif %}
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+
+
 </body>
 </html>

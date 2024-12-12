@@ -6,12 +6,88 @@ console.log(reports);
         maxZoom: 19,
         attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
+    proj4.defs("EPSG:3416", "+proj=lcc +lat_0=47.5 +lon_0=13.3333333333333 +lat_1=49 +lat_2=46 +x_0=400000 +y_0=400000 +datum=ETRS89 +units=m +no_defs");
 
-   var waterlevels = L.tileLayer.wms("https://gis.lfrz.gv.at/wmsgw/?key=460276c6b17d485ea29604196d48fb5a&service=WMS&version=1.3.0&request=GetLegendGraphic&format=image%2Fpng&width=20&height=20&layer=pegelaktuell", {
-        layers: 'pegelaktuell',
-        format: 'image/png',
-        transparent: true,
-    }).addTo(map);
+
+function convertToLatLng(utmX, utmY, zone) {
+    const [lng, lat] = proj4("EPSG:3416", "WGS84", [utmX, utmY]);
+    return { lat, lng };
+}
+function getWaterLevelColor(gesamtcode) {
+  const gesamtcodeString = String(gesamtcode);
+  const firstDigit = gesamtcodeString.charAt(0);
+
+  if (!firstDigit || isNaN(firstDigit)) {
+    return "#808080";
+  }
+
+  const firstDigitNum = parseInt(firstDigit, 10);
+
+  switch (firstDigitNum) {
+    case 1: return "#66ccff";
+    case 2: return "#0066ff";
+    case 3: return "#0000cc";
+    case 4: return "#ff6600";
+    case 5: return "#cc0000";
+    case 6: return "#660033";
+    case 9: return "#808080";
+    default: return "#808080";
+  }
+}
+var waterlevels = L.markerClusterGroup()
+async function getData() {
+  const url = "https://gis.lfrz.gv.at/wmsgw/?key=a64a0c9c9a692ed7041482cb6f03a40a&request=GetFeature&service=WFS&version=2.0.0&outputFormat=json&typeNames=inspire:pegelaktuell";
+
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Response status: ${response.status}`);
+    }
+
+    const json = await response.json();
+    console.log("Fetched GeoJSON data:", json);
+
+    const features = json.features;
+    if (!features || features.length === 0) {
+      console.warn("No features found in the GeoJSON data.");
+      return;
+    }
+
+    features.forEach(function (report) {
+      if (report.geometry && report.geometry.type === "Point") {
+        const coordinates = report.geometry.coordinates;
+        if (coordinates && coordinates.length === 2) {
+          const { lat, lng } = convertToLatLng(coordinates[0], coordinates[1]);
+          if (report.properties.land == "") {
+             const marker = L.marker([lat, lng], {
+              icon: L.divIcon({
+                className: 'water-level-icon',
+                html: `<div style="background-color: ${getWaterLevelColor(report.properties.gesamtcode)}; padding: 5px; border-radius: 50%; width: 20px; height: 20px; border: black solid 1px"></div>`
+              })
+            });
+              const waterLevel = report.properties.wertw_cm || 'No data';
+              const messstelle = report.properties.messstelle || 'No Name';
+              const zeitpunkt = report.properties.zeitpunkt || 'No time data';
+              const popupContent = `
+            <strong>Measurement Station:</strong> ${messstelle}<br>
+            <strong>Time of Last Measurement:</strong> ${zeitpunkt}<br>
+            <strong>Water Level (cm):</strong> ${waterLevel}<br>
+          `;
+              marker.bindPopup(popupContent);
+              waterlevels.addLayer(marker);
+          }
+        }
+      } else {
+        console.warn("Feature does not contain point geometry:", report);
+      }
+    });
+
+  } catch (error) {
+    console.error("Error fetching or processing data:", error.message);
+  }
+  map.addLayer(waterlevels);
+}
+getData();
 function getDistance(lat1, lon1, lat2, lon2) {
     const R = 6371;
     const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -90,10 +166,38 @@ window.onload = function() {
         div.style.padding = '20px';
         div.innerHTML = `
             <strong>Legend</strong><br>
-            <img src="https://gis.lfrz.gv.at/wmsgw/?key=460276c6b17d485ea29604196d48fb5a&service=WMS&version=1.3.0&request=GetLegendGraphic&format=image%2Fpng&width=10&height=30&layer=pegelaktuell" alt="Legend" />
-            <span>Water levels</span><br>
-            <img src="static/marker-icon.png" alt="Report Icon" width="13" height="20">
-            <span>Flood report</span>
+            <div style="display: flex; align-items: center; padding: 2px">
+            <div style="width: 20px; border: black solid 1px;height: 20px; background-color: #66ccff; border-radius: 50%; margin-right: 5px;"></div>
+            <span>Low water</span>
+        </div>
+        <div style="display: flex; align-items: center;padding: 2px">
+            <div style="width: 20px; border: black solid 1px;height: 20px; background-color: #0066ff; border-radius: 50%; margin-right: 5px;"></div>
+            <span>Medium water</span>
+        </div>
+        <div style="display: flex; align-items: center;padding: 2px">
+            <div style="width: 20px; border: black solid 1px;height: 20px; background-color: #0000cc; border-radius: 50%; margin-right: 5px;"></div>
+            <span>Increased flow</span>
+        </div>
+        <div style="display: flex; align-items: center;padding: 2px">
+            <div style="width: 20px; border: black solid 1px;height: 20px; background-color: #ff6600; border-radius: 50%; margin-right: 5px;"></div>
+            <span>Flood level 1</span>
+        </div>
+        <div style="display: flex; align-items: center;padding: 2px">
+            <div style="width: 20px;border: black solid 1px; height: 20px; background-color: #cc0000; border-radius: 50%; margin-right: 5px;"></div>
+            <span>Flood level 2</span>
+        </div>
+        <div style="display: flex; align-items: center;padding: 2px">
+            <div style="width: 20px; border: black solid 1px;height: 20px; background-color: #660033; border-radius: 50%; margin-right: 5px;"></div>
+            <span>Flood level 3</span>
+        </div>
+        <div style="display: flex; align-items: center;padding: 2px">
+            <div style="width: 20px; border: black solid 1px;height: 20px; background-color: #808080; border-radius: 50%; margin-right: 5px;"></div>
+            <span>No data</span>
+        </div>
+             <div style="display: flex; align-items: center;padding: 2px">
+              <img src="https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png" alt="Red Icon" width="20" height="30" style="margin-right: 5px;">
+            <span>Flood reports</span>
+            <div>
         `;
         return div;
     };

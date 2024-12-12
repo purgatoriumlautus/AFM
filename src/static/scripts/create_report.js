@@ -79,14 +79,40 @@ document.getElementById("reportForm").addEventListener("submit", function (e) {
 map.on('click', function(e) {
     var lat = e.latlng.lat;
     var lon = e.latlng.lng;
+
     if (austriaBounds.contains([lat, lon])) {
         marker.setLatLng([lat, lon]);
         document.getElementById("location").value = `${lat},${lon}`;
+
+        // Reverse geocode the selected location to get street and zip code
+        reverseGeocode(lat, lon);
     } else {
         alert("Please select a location within Austria.");
     }
 });
 
+function reverseGeocode(lat, lon) {
+    const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`;
+
+    fetch(url)
+        .then((response) => response.json())
+        .then((data) => {
+            if (data && data.address) {
+                const street = data.address.road || '';
+                const zipcode = data.address.postcode || '';
+
+                // Update the input fields
+                document.getElementById("street").value = street;
+                document.getElementById("zipcode").value = zipcode;
+            } else {
+                alert("Could not retrieve address information for this location.");
+            }
+        })
+        .catch((error) => {
+            console.error("Error reverse geocoding location:", error);
+            alert("An error occurred while retrieving the address.");
+        });
+}
 document.getElementById("description").addEventListener("input", function() {
     var maxLength = 300;
     var currentLength = this.value.length;
@@ -103,10 +129,15 @@ function toggleLocation() {
                 (position) => {
                     const lat = position.coords.latitude;
                     const lon = position.coords.longitude;
+
                     if (austriaBounds.contains([lat, lon])) {
                         locationField.value = `${lat},${lon}`;
                         marker.setLatLng([lat, lon]);
                         map.setView([lat, lon], 13);
+
+                        // Reverse geocode the user's current location to get street and zip code
+                        reverseGeocode(lat, lon);
+
                         locationField.readOnly = true;
                     } else {
                         alert("Your current location is outside Austria.");
@@ -120,6 +151,9 @@ function toggleLocation() {
     } else {
         locationField.value = "";
         locationField.readOnly = false;
+        // Reset street and zipcode fields when location use is toggled off
+        document.getElementById("street").value = "";
+        document.getElementById("zipcode").value = "";
     }
 }
 
