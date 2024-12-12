@@ -196,7 +196,7 @@ window.onload = function() {
         </div>
              <div style="display: flex; align-items: center;padding: 2px">
               <img src="https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png" alt="Red Icon" width="20" height="30" style="margin-right: 5px;">
-            <span>Flood reports</span>
+            <span>Flood report</span>
             <div>
         `;
         return div;

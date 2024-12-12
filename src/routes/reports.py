@@ -65,21 +65,22 @@ def manage_report(report_id):
     manager = Manager.query.filter_by(user_id=current_user.uid).first()
     if request.method == 'POST':
         if manager or super_admin:
+
+            action = request.form.get('action')
+
+            if action == 'approve':
+                report.is_approved = True
+                report.approver_id = manager.id
+                db.session.commit()
+                flash('Report approved successfully.', 'success')
+
+            elif action == 'delete':
+                db.session.delete(report)
+                db.session.commit()
+                flash('Report deleted successfully.', 'success')
+            return redirect(url_for('report.view_reports'))
+        else:
             flash('Access denied. Only managers can manage reports.', 'error')
             return redirect(url_for('main.mainpage'))
-        
-        action = request.form.get('action')
-        
-        if action == 'approve':
-            report.is_approved = True
-            report.approver_id = manager.id
-            db.session.commit()
-            flash('Report approved successfully.', 'success')
-        
-        elif action == 'delete':
-            db.session.delete(report)
-            db.session.commit()
-            flash('Report deleted successfully.', 'success')
-        return redirect(url_for('report.view_reports'))
 
     return render_template('report_details.html', report=report, manager=manager,is_super_admin=is_super_admin())

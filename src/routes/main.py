@@ -15,7 +15,11 @@ def is_super_admin():
 @main.route('/', methods=['GET', 'POST'])
 def mainpage():
     reports = Report.all_reports()
-    return render_template('mainpage.html', reports=reports, current_user=current_user,is_super_admin=is_super_admin())
+    if current_user.is_authenticated:
+        return render_template('mainpage.html', reports=reports, current_user=current_user,
+                               is_super_admin=is_super_admin())
+    else:
+        return render_template('mainpage.html', reports=reports, current_user=current_user)
 
 
 
