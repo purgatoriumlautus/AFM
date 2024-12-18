@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for,current_app,flash
+from flask import Blueprint, render_template, request, redirect, url_for,current_app,flash, jsonify
 from flask_login import login_user, logout_user,current_user,login_required
 from werkzeug.security import check_password_hash
 from src.models import User,Report, Manager
@@ -6,6 +6,7 @@ from src.db import db
 from src.extensions import bcrypt
 from werkzeug.utils import secure_filename
 import os
+from geopy.geocoders import Nominatim
 
 
 def is_super_admin():
@@ -59,10 +60,11 @@ def view_reports():
 @report.route('/view_reports/<int:report_id>', methods=['GET', 'POST'])
 @login_required
 def manage_report(report_id):
+
     report = Report.query.get_or_404(report_id)
     super_admin = is_super_admin()
-    # Check if the user is a manager
     manager = Manager.query.filter_by(user_id=current_user.uid).first()
+    urgency = report.get_urgency()
     if request.method == 'POST':
         if manager or super_admin:
 
@@ -82,5 +84,50 @@ def manage_report(report_id):
         else:
             flash('Access denied. Only managers can manage reports.', 'error')
             return redirect(url_for('main.mainpage'))
+    lat, lon = map(str.strip, report.location.split(','))
+    geolocator = Nominatim(user_agent="AFM")
+    loc = geolocator.reverse(f"{lat}, {lon}")
+    address = loc.address if loc else ""
+    return render_template('report_details.html', current_user = current_user,report=report, manager=manager,is_super_admin=is_super_admin(), location = address,  urgency = urgency)
 
-    return render_template('report_details.html', report=report, manager=manager,is_super_admin=is_super_admin())
+
+@report.route("/score_report/<int:report_id>", methods=['GET', 'POST'])
+@login_required
+def score_report(report_id):
+    try:
+        report = Report.query.get_or_404(report_id)  # Fetch the report
+        manager = Manager.query.filter_by(user_id=current_user.uid).first()
+        urgency = report.get_urgency()
+        lat, lon = map(str.strip, report.location.split(','))
+        geolocator = Nominatim(user_agent="AFM")
+
+        try:
+            loc = geolocator.reverse(f"{lat}, {lon}")
+            address = loc.address if loc else f"Coordinates: {lat}, {lon}"
+
+        except Exception as e:
+            address = f"Coordinates: {lat}, {lon}"  # In case of any other error, show coordinates
+
+        if request.method == 'POST':
+            data = request.get_json()  # Get the JSON data from the frontend
+            score_value = data['score']
+            if not report.is_approved:
+                report.add_score(current_user.uid, int(score_value))  # Add the score
+                return jsonify({
+                    'message': 'Score updated successfully',
+                    'urgency': urgency  # Send back the updated score
+                }), 200
+
+        else:
+            return render_template('report_details.html',
+                                   report=report,
+                                   manager=manager,
+                                   is_super_admin=is_super_admin(),
+                                   location=address,
+                                   urgency = urgency, current_user = current_user)
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+

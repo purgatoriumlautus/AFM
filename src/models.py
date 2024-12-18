@@ -98,21 +98,66 @@ class Report(db.Model):
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     is_approved = db.Column(db.Boolean, default=False, nullable=False)
     approver_id = db.Column(db.Integer, db.ForeignKey('managers.id', ondelete="SET NULL"), nullable=True)
+    average_score = db.Column(db.Float, default=0.0, nullable=False)
 
     creator = db.relationship('User', back_populates='report')
     approver = db.relationship('Manager', backref='approved_reports')
 
-    def __init__(self, location, description, photo_file=None, creator_id=None, approver_id=None, is_approved=False):
+    def __init__(self, location, description, photo_file=None, creator_id=None, approver_id=None, is_approved=False, avarage_score = None, score_count=None):
         self.location = location
         self.description = description
         self.photo_file = photo_file
         self.creator_id = creator_id
         self.is_approved = is_approved
+        self.average_score = avarage_score
+        self.score_count = score_count
 
     @staticmethod
     def all_reports():
         return Report.query.all()
 
+    def add_score(self, user_id, score_value):
+        existing_score = Score.query.filter_by(report_id=self.id, user_id=user_id).first()
+        if existing_score:
+            existing_score.score = score_value
+            db.session.commit()
+        else:
+            new_score = Score(report_id=self.id, user_id=user_id, score=score_value)
+            db.session.add(new_score)
+            db.session.commit()
+        self.recalculate_average_score()
+
+    def recalculate_average_score(self):
+        scores = [score.score for score in self.scores]
+        if not scores:
+            self.average_score = 0
+        else:
+            self.average_score = sum(scores) / len(scores)
+        db.session.commit()
+
+    def get_urgency(self):
+        if self.average_score <= 30:
+            return "Low Urgency"
+        elif self.average_score <= 60:
+            return "Medium Urgency"
+        else:
+            return "High Urgency"
+
+class Score(db.Model):
+    __tablename__ = 'scores'
+    id = db.Column(db.Integer, primary_key=True)
+    report_id = db.Column(db.Integer, db.ForeignKey('reports.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.uid'), nullable=False)
+    score = db.Column(db.Float, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    report = db.relationship('Report', backref=db.backref('scores'))
+    user = db.relationship('User', backref=db.backref('scores'))
+    __table_args__ = (db.UniqueConstraint('report_id', 'user_id', name='unique_user_report_score'),)
+    def __init__(self, report_id, user_id, score):
+        self.report_id = report_id
+        self.user_id = user_id
+        self.score = score
 
 class Organisation(db.Model):
     __tablename__ = 'organisations'
