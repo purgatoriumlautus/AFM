@@ -5,131 +5,101 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Report Details</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 </head>
 <body>
     {% include "navbar.html" %}
     <div class="container mt-4">
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            <div class="alert alert-{{ messages[0][0] }} mt-3">
-                {{ messages[0][1] }}
-            </div>
-        {% endif %}
-    {% endwith %}
-</div>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="alert alert-{{ messages[0][0] }} mt-3">
+                    {{ messages[0][1] }}
+                </div>
+            {% endif %}
+        {% endwith %}
+    </div>
     <div class="container">
-    <br>
-  <div class="row">
-    <div class="col">
-     {% if report.photo_file %}
+        <br>
+        <div class="row">
+            <div class="col-md-6">
+                {% if report.photo_file %}
                     <img src="{{ url_for('static', filename= report.photo_file) }}" alt="Report Image" style="width: 100%">
                 {% else %}
                     <img src="https://via.placeholder.com/600x400" alt="No Image" class="post-image">
                 {% endif %}
-    </div>
+            </div>
 
-    <div class="col" style="position: relative">
-         <span id = "location">{{location}}</span> <i style="color: green; font-size: large" class="bi bi-geo-alt-fill"></i>
-        <br>
-        <br>
-        <h5>Description of an incident </h5>
-        <div>{{ report.description }}</div>
-        <br>
-        <br>
-         <div style="display: flex; justify-content: space-between;position: absolute; bottom: 10px; gap:30px">
-             <div><i class="bi bi-calendar3"></i> <span>{{ report.created_at.strftime('%B %d, %Y, %H:%M') }}</span> </div>
-                {% if manager or is_super_admin %}
-    <span>{{ urgency }}</span>
-             {% endif %}
-</div>
-
-    </div>
-</div>
+            <div class="col-md-6" style="position: relative">
+                <span id="location">{{ location }}</span> <i style="color: green; font-size: large" class="bi bi-geo-alt-fill"></i>
+                <br><br>
+                <h5>Description of an incident </h5>
+                <div>{{ report.description }}</div>
+                <br><br>
+                <div style="display: flex; justify-content: space-between; position: absolute; bottom: 10px; gap:30px">
+                    <div><i class="bi bi-calendar3"></i> <span>{{ report.created_at.strftime('%B %d, %Y, %H:%M') }}</span></div>
+                    {% if manager or is_super_admin %}
+                        <span>{{ urgency }}</span>
+                    {% endif %}
+                </div>
+            </div>
         </div>
 
-
-</div>
+        {% if manager or is_super_admin %}
+            <br>
+            <div class="row justify-content-center">
+                <div class="col-auto">
+                    {% if not report.is_approved %}
+                        <form method="POST" class="me-3">
+                            <button type="submit" name="action" value="approve" class="btn btn-dark btn-lg">Approve</button>
+                        </form>
+                    {% else %}
+                        <form method="POST">
+                            <button type="submit" name="action" value="delete" class="btn btn-dark btn-lg">Delete</button>
+                        </form>
+                    {% endif %}
+                </div>
+                <div class="col-auto">
+                    {% if not report.is_approved %}
+                        <form method="POST">
+                            <button type="submit" name="action" value="delete" class="btn btn-dark btn-lg">Delete</button>
+                        </form>
+                    {% else %}
+                        <form method="GET" action="{{ url_for('task.create_task', report_id=report.id) }}" enctype="multipart/form-data">
+                            <button type="submit" name="action" class="btn btn-dark btn-lg">Create Task</button>
+                        </form>
+                    {% endif %}
+                </div>
+            </div>
+        {% elif not current_user.uid == report.creator_id and not report.is_approved %}
+            <div style="text-align: center; width: 100%; margin-top: 10px">
+                <div style="width: 50%; display: inline-block;">
+                    <input onchange="updateScore(this)" type="range" class="form-range customRange" value="1" min="1" max="100">
+                    <div id="score" class="d-flex justify-content-between">
+                        <span>Low Urgency</span>
+                        <span>Medium Urgency</span>
+                        <span>High Urgency</span>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
     </div>
 
-  </div>
-     {% if manager or is_super_admin %}
-    <br>
-     <div class="row">
-    <div class="col">
+    <script>
+        function updateScore(elem) {
+            const score = elem.value;
+            console.log("Score being sent:", score);
 
-    </div>
-         <div class="col">
+            var reportid = "{{ report.id }}";
+            fetch(`/score_report/${reportid}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ score: parseInt(score) })
+            })
+        }
+    </script>
 
-    </div>
-         <div class="col">
-
-    </div>
-         <div class="col">
-
-    </div>
-          <div class="col">
-    {% if not report.is_approved %}
-    <form method="POST" class="me-3">
-        <button type="submit" name="action" value="approve" class="btn btn-dark btn-lg">Approve</button>
-    </form>
-              {% endif %}
- </div>
-         <div class="col">
-    <form method="POST">
-        <button type="submit" name="action" value="delete" class="btn btn-dark btn-lg">Delete</button>
-    </form>
-         </div>
-         <div class="col">
-
-    </div>
-         <div class="col">
-
-    </div>
-         <div class="col">
-
-    </div>
-         <div class="col">
-
-    </div>
-
-
-     </div>
-
-    {% elif not current_user.uid==report.creator_id and not report.is_approved%}
-    <div style="text-align: center; width: 100%; margin-top: 10px">
-    <div style="width: 50%; display: inline-block;">
-        <input onchange="updateScore(this)" type="range" class="form-range customRange" value="1" min="1" max="100">
-        <div id = "score" class="d-flex justify-content-between">
-            <span>Low Urgency</span>
-            <span>Medium Urgency</span>
-            <span>High Urgency</span>
-        </div>
-
-    </div>
-</div>
-{% endif %}
-    </div>
-<script>
-   function updateScore(elem) {
-        const score = elem.value;  // Get the value of the range input
-
-       console.log("Score being sent:", score);
-
-        var reportid = "{{ report.id }}"
-        fetch(`/score_report/${reportid}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ score: parseInt(score) })
-        })
-
-
-    }
-</script>
-
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
 </body>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
-
 </html>

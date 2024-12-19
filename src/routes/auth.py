@@ -121,16 +121,20 @@ def verify_email(user_id):
 def register_owner():
     if request.method == 'GET':
         return render_template('register_owner.html')
-    
+
     elif request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
         email = request.form['email']
 
         # Enforce password strength for owners as well
-        if len(password) < 8 or not re.search(r'[A-Z]', password) or not re.search(r'[a-z]', password) or not re.search(r'[0-9]', password) or not re.search(r'[!@#$%^&*(),.?":{}|<>]', password):
-            flash('Password must be at least 8 characters long and include an uppercase letter, a lowercase letter, a digit, and a special character.', 'danger')
+        if len(password) < 8 or not re.search(r'[A-Z]', password) or not re.search(r'[a-z]', password) or not re.search(
+                r'[0-9]', password) or not re.search(r'[!@#$%^&*(),.?":{}|<>]', password):
+            flash(
+                'Password must be at least 8 characters long and include an uppercase letter, a lowercase letter, a digit, and a special character.',
+                'danger')
             return redirect(url_for('auth.register_owner'))
+
 
         existing_user_by_username = User.query.filter_by(username=username).first()
         existing_user_by_email = User.query.filter_by(email=email).first()
@@ -142,15 +146,37 @@ def register_owner():
             flash('Email already exists! Please log in.', 'danger')
             return redirect(url_for('auth.login'))
 
-
         hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
-        user = User(username=username, password=hashed_password, email=email, is_owner=True)
+
+        user = User(username=username, password=hashed_password, email=email, is_owner=True,
+                    email_confirmed=False)
         db.session.add(user)
         db.session.commit()
-        login_user(user)
-        flash('Owner account created successfully!', 'success')
-        return redirect(url_for('main.mainpage'))
 
+
+        verification_link = url_for('auth.verify_email', user_id=user.uid, _external=True)
+        msg = Message(
+            sender='AFM Team <afm.team.contact@gmail.com>',
+            subject='AFM Account Verification',
+            recipients=[email],
+            body=f'This is the plain text version of the email. Verify your account: {verification_link}',
+            html=f"""
+                <html>
+                    <body>
+                        <h1>Verify Your Account</h1>
+                        <p>Thank you for signing up with <strong>AFM</strong>!</p>
+                        <p>Please click the link below to verify your email address and activate your account:</p>
+                        <p><a href="{verification_link}" style="color:blue; font-weight:bold;">Verify My Account</a></p>
+                        <p><br>The AFM Team</p>
+                    </body>
+                </html>
+            """
+        )
+        mail.send(msg)
+
+        flash('A verification email has been sent. Please check your inbox to activate your account.', 'info')
+
+        return redirect(url_for('auth.login'))
 @auth.route('/profile/<username>', methods=['GET'])
 @login_required
 def profile(username): # can be modified so that admins can see profiles of other users

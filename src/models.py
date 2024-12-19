@@ -18,7 +18,7 @@ class User(db.Model, UserMixin):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     organisation_id = db.Column(
         db.Integer,
-        db.ForeignKey('organisations.id', name='fk_user_organisation_id',ondelete='SET NULL'),
+        db.ForeignKey('organisations.id', name='fk_user_organisation_id', ondelete='SET NULL'),
     )
 
     # Relationships
@@ -58,7 +58,15 @@ class User(db.Model, UserMixin):
 
     def is_super_admin(self):
         return self.email == sup_email
-        
+
+
+agent_task = db.Table(
+    'agent_task',
+    db.Column('agent_id', db.Integer, db.ForeignKey('agents.id'), primary_key=True),
+    db.Column('task_id', db.Integer, db.ForeignKey('tasks.id'), primary_key=True),
+    db.Column('assigned_at', db.DateTime, default=datetime.utcnow)  # Track assignment time
+)
+
 
 class Agent(db.Model):
     __tablename__ = 'agents'
@@ -68,6 +76,7 @@ class Agent(db.Model):
     position = db.Column(db.String(100), nullable=False, default="Agent")
 
     user = db.relationship('User', back_populates='agent')
+    tasks = db.relationship('Task', secondary=agent_task, back_populates='agents')
 
     def __repr__(self):
         return f"<Agent {self.id}, Position: {self.position}>"
@@ -82,10 +91,14 @@ class Manager(db.Model):
 
     user = db.relationship('User', back_populates='manager')
 
-    
-    
     def __repr__(self):
         return f"<Manager {self.id}, Position: {self.position}>"
+
+task_report = db.Table(
+    'task_report',
+    db.Column('task_id', db.Integer, db.ForeignKey('tasks.id'), primary_key=True),
+    db.Column('report_id', db.Integer, db.ForeignKey('reports.id'), primary_key=True)
+)
 
 
 class Report(db.Model):
@@ -102,8 +115,9 @@ class Report(db.Model):
 
     creator = db.relationship('User', back_populates='report')
     approver = db.relationship('Manager', backref='approved_reports')
-
-    def __init__(self, location, description, photo_file=None, creator_id=None, approver_id=None, is_approved=False, avarage_score = None, score_count=None):
+    tasks = db.relationship('Task', secondary='task_report', back_populates='reports')
+    def __init__(self, location, description, photo_file=None, creator_id=None, approver_id=None, is_approved=False,
+                 avarage_score=None, score_count=None):
         self.location = location
         self.description = description
         self.photo_file = photo_file
@@ -143,6 +157,7 @@ class Report(db.Model):
         else:
             return "High Urgency"
 
+
 class Score(db.Model):
     __tablename__ = 'scores'
     id = db.Column(db.Integer, primary_key=True)
@@ -154,10 +169,12 @@ class Score(db.Model):
     report = db.relationship('Report', backref=db.backref('scores'))
     user = db.relationship('User', backref=db.backref('scores'))
     __table_args__ = (db.UniqueConstraint('report_id', 'user_id', name='unique_user_report_score'),)
+
     def __init__(self, report_id, user_id, score):
         self.report_id = report_id
         self.user_id = user_id
         self.score = score
+
 
 class Organisation(db.Model):
     __tablename__ = 'organisations'
@@ -191,3 +208,38 @@ class Organisation(db.Model):
 
     def __repr__(self):
         return f'<Organisation {self.name}>'
+
+
+class Task(db.Model):
+    __tablename__ = 'tasks'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.String(300), nullable=True)  # Add description column
+    creator_id = db.Column(db.Integer, db.ForeignKey('managers.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    creator = db.relationship('Manager', backref=db.backref('tasks', lazy='dynamic'))
+    agents = db.relationship('Agent', secondary='agent_task', back_populates='tasks')
+    reports = db.relationship('Report', secondary=task_report, back_populates='tasks')
+    def __init__(self, name, creator_id, description=None, created_at=None):
+        self.name = name
+        self.description = description
+        self.creator_id = creator_id
+        self.created_at = created_at or datetime.utcnow()
+
+class TaskRequest(db.Model):
+    __tablename__ = 'task_requests'
+
+    id = db.Column(db.Integer, primary_key=True)
+    task_id = db.Column(db.Integer, db.ForeignKey('tasks.id'), nullable=False)
+    agent_id = db.Column(db.Integer, db.ForeignKey('agents.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    approved = db.Column(db.Boolean, default=False)
+
+    task = db.relationship('Task', backref=db.backref('assignment_requests', lazy=True))
+    agent = db.relationship('Agent', backref=db.backref('task_requests', lazy=True))
+
+    def __init__(self, task_id, agent_id):
+        self.task_id = task_id
+        self.agent_id = agent_id
