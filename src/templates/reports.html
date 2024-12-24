@@ -4,10 +4,71 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" integrity="sha512-dy8twfI2rYdtmdWlKQh1fJ0Ylo6vXILcoTq9mcptNheIqlO0Dsc8kZb0ztldFrb7JtB9vTv6D6hdO8zl+7bqg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <title>View Reports</title>
     <style>
-        .navbar .nav-link.vr {
-          color: #4e8fcc; background-color: #d7e1f3
+       .navbar .nav-link.vr{
+              color: #4e8fcc; background-color: #d7e1f3
+        }
+        .report-card {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 16px;
+            background-color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .report-card .report-info {
+            display: flex;
+            align-items: center;
+
+        }
+        .report-card img {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 4px;
+            margin-right: 12px;
+        }
+        .report-info .text-truncate {
+            width: 200px;
+            max-width: 200px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 0px;
+        }
+        .gap-2 {
+            gap: 8px;
+        }
+        .urgency-badge {
+            font-size: 0.875rem;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+        .urgency-low {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .urgency-medium {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        .urgency-high {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .delete-btn {
+            color: #dc3545;
+            font-size: 1.25rem;
+            cursor: pointer;
+        }
+        .delete-btn:hover {
+            color: #c82333;
         }
     </style>
 </head>
@@ -23,50 +84,68 @@
     {% endwith %}
 </div>
 <div class="container my-5">
-        <h4 class="mb-4 text-center">All Reports</h4>
-        <table class="table  table-bordered">
-            <thead class="thead-dark">
-                <tr>
-                    <th>ID</th>
-                    <th>Location</th>
-                    <th>Description</th>
-                    <th>Status</th>
-                    <th>Image</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for report in reports %}
-                <tr>
-                    <td>{{ report.id }}</td>
-                    <td>{{ report.location }}</td>
-                    <td>{{ report.description }}</td>
-                    <td>
-                        {% if report.is_approved %}
-                            <span >Approved</span>
-                        {% else %}
-                            <span >Pending</span>
-                        {% endif %}
-                    </td>
-                    <td>
-                        {% if report.photo_file %}
+    <!-- Filters Form -->
+    <form method="GET" action="{{ url_for('report.view_reports') }}" class="row mb-4">
 
-                            <img src="{{ url_for('static', filename=report.photo_file) }}"
-                                 alt="Report Image" class="img-thumbnail" style="width: 50px; height: 50px; object-fit: cover;">
-                        {% else %}
+        <div class="col-md-2">
+            <label for="urgency" class="form-label">Filter by Urgency</label>
+            <select name="urgency" id="urgency" class="form-select">
+                <option value="">All</option>
+                <option value="low" {% if urgency == "low" %}selected{% endif %}>Low Urgency</option>
+                <option value="medium" {% if urgency == "medium" %}selected{% endif %}>Medium Urgency</option>
+                <option value="high" {% if urgency == "high" %}selected{% endif %}>High Urgency</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label for="status" class="form-label">Filter by Status</label>
+            <select name="status" id="status" class="form-select">
+                <option value="">All</option>
+                <option value="approved" {% if status == "approved" %}selected{% endif %}>Approved</option>
+                <option value="pending" {% if status == "pending" %}selected{% endif %}>Pending</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label for="sort" class="form-label">Sort by Date</label>
+            <select name="sort" id="sort" class="form-select">
+                <option value="newest" {% if sort == "newest" %}selected{% endif %}>Newest First</option>
+                <option value="oldest" {% if sort == "oldest" %}selected{% endif %}>Oldest First</option>
+            </select>
+        </div>
+        <div class="col-md-1 d-flex align-items-end">
+            <button type="submit" class="btn btn-dark w-100">Filter</button>
+        </div>
+    </form>
 
-                            <img src="https://via.placeholder.com/50" class="img-thumbnail" alt="No Image">
-                        {% endif %}
-                    </td>
-                    <td>
-                        <a href="{{ url_for('report.manage_report', report_id=report.id) }}" >View Details</a>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-
+    {% for report in reports %}
+    <div class="report-card">
+    <div class="report-info">
+            <img src="{{ url_for('static', filename=report.photo_file) if report.photo_file else 'https://via.placeholder.com/50' }}" alt="Report Image">
+            <div>
+                 <p class="mb-0 text-truncate d-inline"><span class="text-muted">{{ report.location }}</span> <i style="color: green; font-size: large" class="bi bi-geo-alt-fill"></i></p>
+            <p class="mb-0 text-truncate">{{ report.description }}</p>
+            </div>
+        </div>
+    <div class="d-flex align-items-center">
+        <span class="urgency-badge
+            {% if report.get_urgency() == 'Low Urgency' %}urgency-low{% elif report.get_urgency() == 'Medium Urgency' %}urgency-medium{% else %}urgency-high{% endif %}">
+            {{ report.get_urgency() }}
+        </span>
     </div>
+    <div class="d-flex align-items-center">
+        <span>{{ "Approved" if report.is_approved else "Pending" }}</span>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+        <a href="{{ url_for('report.manage_report', report_id=report.id) }}" class="btn btn-sm btn-light">View</a>
+        <form method="POST" action="{{ url_for('report.manage_report', report_id=report.id) }}" style="display:inline;">
+            <input type="hidden" name="action" value="delete">
+            <button type="submit" class="btn delete-btn" title="Delete Report">
+                <i class="bi bi-trash3"></i>
+            </button>
+        </form>
+    </div>
+</div>
+    {% endfor %}
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
 </body>

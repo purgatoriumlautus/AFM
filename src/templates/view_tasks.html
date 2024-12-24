@@ -1,13 +1,377 @@
-{% for task in tasks %}
-    <div>
-        <h3>{{ task.location }} - {{ task.status }}</h3>
-        <p>{{ task.description }}</p>
-        <p>Created by: {{ task.manager.username }}</p>
-        <p>Reports:</p>
-        <ul>
-            {% for report in task.reports %}
-                <li>{{ report.description }} (Location: {{ report.location }})</li>
-            {% endfor %}
-        </ul>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" integrity="sha512-dy8twfI2rYdtmdWlKQh1fJ0Ylo6vXILcoTq9mcptNheIqlO0Dsc8kZb0ztldFrb7JtB9vTv6D6hdO8zl+7bqg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <title>View Tasks</title>
+    <style>
+        .navbar .nav-link.vr {
+            color: #4e8fcc; background-color: #d7e1f3;
+        }
+        .task-card {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 16px;
+            background-color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .task-card .task-info {
+            display: flex;
+            justify-content: center;
+        }
+        .task-card .task-info p {
+            margin: 0;
+        }
+        .task-card .task-info .task-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .task-info .text-truncate {
+            width: 200px;
+            max-width: 200px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 0px;
+        }
+        .gap-2 {
+            gap: 8px;
+        }
+        .badge{
+            font-size: 0.875rem;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: normal;
+        }
+        .nonstr {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .inpr{
+            background-color: #cde4ff;
+            color: #02468f;
+        }
+        .done {
+             background-color: #d4edda;
+            color: #155724;
+
+        }
+        .delete-btn {
+            color: #dc3545;
+            font-size: 1.25rem;
+            cursor: pointer;
+        }
+        .delete-btn:hover {
+            color: #c82333;
+        }
+        .edit-btn, .end-btn {
+            font-size: 1.25rem;
+            cursor: pointer;
+        }
+        .edit-btn:hover, .end-btn:hover {
+            color: #007bff;
+        }
+        #selectedAgents {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px; /* Adds space between badges */
+}
+
+#selectedAgents .badge {
+    background-color: #007bff;
+    color: white;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    padding: 0.4rem 0.8rem;
+    border-radius: 20px;
+    font-size: 14px;
+}
+
+#selectedAgents .badge i {
+    margin-left: 5px; /* Space between text and the "x" icon */
+}
+    </style>
+</head>
+<body>
+{% include "navbar.html" %}
+<div class="container mt-4">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="alert alert-{{ messages[0][0] }} mt-3">
+                {{ messages[0][1] }}
+            </div>
+        {% endif %}
+    {% endwith %}
+</div>
+<div class="container my-5">
+
+    <form method="GET" action="{{ url_for('task.view_tasks') }}" class="row mb-4">
+
+        <div class="col-md-2">
+            <label for="status" class="form-label">Filter by Status</label>
+            <select name="status" id="status" class="form-select">
+                <option value="">All</option>
+                <option value="Not Started" {% if status == "Not Started" %}selected{% endif %}>Not Started</option>
+                <option value="In Process" {% if status == "In Process" %}selected{% endif %}>In Process</option>
+                 <option value="Done" {% if status == "Done" %}selected{% endif %}>Done</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label for="sort" class="form-label">Sort by Date</label>
+            <select name="sort" id="sort" class="form-select">
+                <option value="newest" {% if sort == "newest" %}selected{% endif %}>Newest First</option>
+                <option value="oldest" {% if sort == "oldest" %}selected{% endif %}>Oldest First</option>
+            </select>
+        </div>
+
+        <div class="col-md-1 d-flex align-items-end">
+            <button type="submit" class="btn btn-dark w-100">Filter</button>
+        </div>
+    </form>
+
+    {% for task in tasks %}
+    <div class="task-card">
+        <div class="task-info" style="margin-right: 20px">
+            <div>
+                <p class="task-name">{{ task.name }}</p>
+
+            </div>
+
+
+            <div style="margin-left: 20px">
+
+ <p class="text-truncate">{{ task.description or 'No Description' }}</p>
+            </div>
+        </div>
+
+        <div class="d-flex align-items-center">
+            <span class="badge
+                {% if task.status == 'Not Started' %}nonstr{% elif task.status == 'In Process' %}inpr{% else %}done{% endif %}">{{ task.status }}</span>
+        </div>
+    {% if task.reports %}
+        <div >
+               <a href="{{ url_for('report.manage_report', report_id=task.reports[0].id) }}" style=" text-decoration: none;">Link to associated report</a>
+
+        </div>
+        {% endif %}
+        <div class="d-flex align-items-center gap-2">
+             {% if task.status != 'Done' %}
+            <form method="POST" action="{{ url_for('task.end_task', task_id=task.id) }}" style="display:inline;">
+                <input type="hidden" name="action" value="end">
+                <button type="submit" class="btn end-btn" title="End Task">
+                 <i class="bi bi-stop-circle"></i> Finish
+                </button>
+            </form>
+            {% endif %}
+
+            <a href="#" class="edit-btn" data-bs-toggle="offcanvas" data-bs-target="#editTaskOffcanvas{{ task.id }}">
+                <i class="bi bi-pencil-square"></i> Edit
+            </a>
+
+            <form method="POST" action="{{ url_for('task.delete_task', task_id=task.id) }}" style="display:inline;">
+                <input type="hidden" name="action" value="delete">
+                <button type="submit" class="btn delete-btn" title="Delete Task">
+                    <i class="bi bi-trash3"></i>
+                </button>
+            </form>
+        </div>
     </div>
-{% endfor %}
+
+ <div class="offcanvas offcanvas-end" tabindex="-1" id="editTaskOffcanvas{{ task.id }}" aria-labelledby="editTaskOffcanvasLabel{{ task.id }}">
+            <div class="offcanvas-header">
+                <h5 id="editTaskOffcanvasLabel{{ task.id }}">Edit Task: {{ task.name }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+            </div>
+            <div class="offcanvas-body">
+                <form method="POST" action="{{ url_for('task.update_task', task_id=task.id) }}">
+                     <div class="mb-3">
+        <label for="name" class="form-label">Title</label>
+        <input type="text" id="name" name="name" class="form-control" placeholder="Title of the task" value="{{ task.name }}">
+    </div>
+    <div class="mb-3">
+        <label for="description" class="form-label">Describe task</label>
+          <textarea class="form-control" id="description" name="description" rows="3" maxlength="300" placeholder="Describe the task (max 300 characters)"> {{ task.description}}</textarea>
+        <div id="charCount" class="form-text">0/300 characters</div>
+    </div>
+
+   <div class="mb-3">
+    <label class="form-label">Selected Agents</label>
+    <div id="selectedAgents" class="d-flex flex-wrap">
+    {% for agent in task.agents %}
+        <div class="badge m-1" data-agent-id="{{ agent.id }}">
+            {{ agent.user.username }}
+            <i class="bi bi-x-circle" style="cursor: pointer;" onclick="removeAgent({{ agent.id }})"></i>
+        </div>
+    {% endfor %}
+</div>
+
+        <button type="button" class="mt-2" id="addAgentBtn" style="background: none; border: none; color: #007bff; font-size: 16px;">
+            + Add Agent
+        </button>
+
+        <div id="agentListContainer" class="mt-2" style="display: none; border: 1px solid #ccc; border-radius: 8px; padding: 10px; background-color: white; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);">
+            <div class="mb-3">
+                <label class="form-label">Select Organization</label>
+                <select id="organizationSelect" class="form-select mb-3">
+                    <option value="current" selected>Current Organization</option>
+                    <option value="other">Other Organizations</option>
+                </select>
+            </div>
+
+            <input type="text" id="agentSearch" class="form-control mb-2" placeholder="Search for agents..." style="border-radius: 5px;">
+            <div id="agentList" class="list-group">
+
+                {% for agent in my_agents %}
+                    <a href="#" class="list-group-item list-group-item-action" data-agent-id="{{ agent.id }}" data-agent-name="{{ agent.user.username }}" data-org="current" style="border-radius: 5px;">
+                        <i class="bi bi-person-circle"></i> {{ agent.user.username }}
+                    </a>
+                {% endfor %}
+
+                {% for agent in other_agents %}
+                    <a href="#" class="list-group-item list-group-item-action" data-agent-id="{{ agent.id }}" data-agent-name="{{ agent.user.username }}" data-org="other" style="border-radius: 5px;">
+                        <i class="bi bi-person-circle"></i> {{ agent.user.username }}
+                    </a>
+                {% endfor %}
+            </div>
+        </div>
+         <div id="selected" style="display: none;"></div>
+
+                    <button type="submit" class="btn btn-dark d-block mx-auto">Save Changes</button>
+                </form>
+            </div>
+        </div>
+        </div>
+        {% endfor %}
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+<script>
+    const addAgentBtn = document.getElementById("addAgentBtn");
+    const agentListContainer = document.getElementById("agentListContainer");
+    const organizationSelect = document.getElementById("organizationSelect");
+
+
+    addAgentBtn.addEventListener("click", function () {
+        agentListContainer.style.display = agentListContainer.style.display === 'none' ? 'block' : 'none';
+    });
+
+    const agentSearchInput = document.getElementById('agentSearch');
+    const agentList = document.getElementById('agentList');
+
+    agentSearchInput.addEventListener('input', function (e) {
+        const filter = e.target.value.toLowerCase();
+        const items = agentList.querySelectorAll('.list-group-item');
+        items.forEach(item => {
+            const agentName = item.getAttribute('data-agent-name').toLowerCase();
+            if (agentName.includes(filter)) {
+                item.style.display = '';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    });
+
+    function isAgentSelected(agentId) {
+        const selectedAgents = document.querySelectorAll('#selectedAgents .badge');
+        for (let agent of selectedAgents) {
+            if (agent.dataset.agentId === agentId) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    document.querySelectorAll(".list-group-item").forEach(item => {
+    item.addEventListener("click", function (e) {
+        e.preventDefault();
+        const agentName = item.getAttribute("data-agent-name");
+        const agentId = item.getAttribute("data-agent-id");
+        const agentOrg = item.getAttribute("data-org");
+
+        if (isAgentSelected(agentId)) {
+            alert("This agent has already been added.");
+            return;
+        }
+
+        const agentDiv = document.createElement("div");
+        agentDiv.classList.add("badge", "m-1");
+        agentDiv.textContent = agentName;
+        agentDiv.dataset.agentId = agentId;
+
+        if (agentOrg === 'current') {
+            agentDiv.classList.add("bg-primary");
+        } else {
+            agentDiv.classList.add("bg-secondary");
+        }
+        agentDiv.addEventListener('click', function () {
+            agentDiv.remove();
+            removeAgentIdFromForm(agentId);
+        });
+        document.getElementById("selectedAgents").appendChild(agentDiv);
+        addAgentIdToForm(agentId);
+        agentListContainer.style.display = 'none';
+    });
+});
+
+function addAgentIdToForm(agentId) {
+    const hiddenInput = document.createElement('input');
+    hiddenInput.type = 'hidden';
+    hiddenInput.name = 'agents';
+    hiddenInput.value = agentId;
+    console.log("Added")
+    document.getElementById("selected").appendChild(hiddenInput);
+}
+
+function removeAgentIdFromForm(agentId) {
+    const inputs = document.querySelectorAll('#selectedAgentIds input[type="hidden"]');
+    inputs.forEach(input => {
+        if (input.value === agentId) {
+            input.remove();
+        }
+    });
+}
+
+    function filterAgents() {
+        const selectedOrg = organizationSelect.value;
+        const agents = document.querySelectorAll('.list-group-item');
+        agents.forEach(agent => {
+            const agentOrg = agent.getAttribute('data-org');
+            if (selectedOrg === 'current' && agentOrg === 'current') {
+                agent.style.display = '';
+            } else if (selectedOrg === 'other' && agentOrg === 'other') {
+                agent.style.display = '';
+            } else {
+                agent.style.display = 'none';
+            }
+        });
+    }
+
+    organizationSelect.addEventListener('change', function () {
+        filterAgents();
+    });
+    filterAgents();
+    function removeAgent(agentId) {
+    // Remove the badge from the DOM
+    const badge = document.querySelector(`.badge[data-agent-id="${agentId}"]`);
+    if (badge) {
+        badge.remove();
+    }
+
+    // Optionally, you can also remove the agent from the hidden input form here
+    const hiddenInputs = document.querySelectorAll('#selected input[type="hidden"]');
+    hiddenInputs.forEach(input => {
+        if (input.value === agentId) {
+            input.remove();
+        }
+    });
+}
+</script>
+</body>
+</html>

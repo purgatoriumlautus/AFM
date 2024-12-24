@@ -18,7 +18,7 @@ class User(db.Model, UserMixin):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     organisation_id = db.Column(
         db.Integer,
-        db.ForeignKey('organisations.id', name='fk_user_organisation_id', ondelete='SET NULL'),
+        db.ForeignKey('organisations.id', name='fk_user_organisation_id', ondelete='SET NULL', use_alter = True),
     )
 
     # Relationships
@@ -182,11 +182,7 @@ class Organisation(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     token = db.Column(db.String(100), unique=True, nullable=True)  # Link token for invites
-    owner_id = db.Column(
-        db.Integer,
-        db.ForeignKey('users.uid', name='fk_organisation_owner_id', ondelete="CASCADE"),  # Enable CASCADE deletion
-        nullable=True
-    )
+    owner_id = db.Column(db.Integer, nullable=True)  # Soft reference to owner ID (not an FK)
 
     # Relationships
     users = db.relationship(
@@ -194,12 +190,6 @@ class Organisation(db.Model):
         back_populates='organisation',
         foreign_keys='User.organisation_id',
         lazy='dynamic'
-    )
-    owner = db.relationship(
-        'User',
-        foreign_keys=[owner_id],
-        backref='owned_organisation',
-        uselist=False
     )
 
     __table_args__ = (
@@ -218,15 +208,17 @@ class Task(db.Model):
     description = db.Column(db.String(300), nullable=True)  # Add description column
     creator_id = db.Column(db.Integer, db.ForeignKey('managers.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    status = db.Column(db.String(50), default="Not Started", nullable=False)
 
     creator = db.relationship('Manager', backref=db.backref('tasks', lazy='dynamic'))
     agents = db.relationship('Agent', secondary='agent_task', back_populates='tasks')
     reports = db.relationship('Report', secondary=task_report, back_populates='tasks')
-    def __init__(self, name, creator_id, description=None, created_at=None):
+    def __init__(self, name, creator_id, description=None, created_at=None, status="Not Started"):
         self.name = name
         self.description = description
         self.creator_id = creator_id
         self.created_at = created_at or datetime.utcnow()
+        self.status = status
 
 class TaskRequest(db.Model):
     __tablename__ = 'task_requests'

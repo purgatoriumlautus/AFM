@@ -48,13 +48,47 @@ def create_report():
 def view_reports():
     super_admin = is_super_admin()
     manager = Manager.query.filter_by(user_id=current_user.uid).first()
-    if manager or super_admin:
-        reports = Report.query.all()  # Optionally filter based on approval status
-        return render_template('reports.html', reports=reports,is_super_admin=super_admin)
-    else:
-        flash(f'Access denied. Only managers can manage reports is', 'error')
-        return redirect(url_for('main.mainpage'))
 
+    if manager or super_admin:
+
+        query = Report.query
+        urgency = request.args.get('urgency')
+        status = request.args.get('status')
+        sort = request.args.get('sort')
+
+        if status:
+            if status == "approved":
+                query = query.filter_by(is_approved=True)
+            elif status == "pending":
+                query = query.filter_by(is_approved=False)
+
+        if urgency:
+            if urgency == "low":
+                query = query.filter(Report.average_score <= 30)
+            elif urgency == "medium":
+                query = query.filter(Report.average_score > 30, Report.average_score <= 60)
+            elif urgency == "high":
+                query = query.filter(Report.average_score > 60)
+
+        if sort:
+            if sort == "newest":
+                query = query.order_by(Report.created_at.desc())
+            elif sort == "oldest":
+                query = query.order_by(Report.created_at.asc())
+
+        reports = query.all()
+
+        return render_template(
+            'reports.html',
+            reports=reports,
+            is_super_admin=super_admin,
+            urgency=urgency,
+            status=status,
+            sort=sort
+        )
+    else:
+        flash('Access denied. Only managers or super admins can manage reports.', 'error')
+        return redirect(url_for('main.mainpage'))
 
 
 @report.route('/view_reports/<int:report_id>', methods=['GET', 'POST'])
