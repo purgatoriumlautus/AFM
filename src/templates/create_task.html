@@ -156,7 +156,7 @@ function addAgentIdToForm(agentId) {
 }
 
 function removeAgentIdFromForm(agentId) {
-    const inputs = document.querySelectorAll('#selectedAgentIds input[type="hidden"]');
+    const inputs = document.querySelectorAll('#selected input[type="hidden"]');
     inputs.forEach(input => {
         if (input.value === agentId) {
             input.remove();
