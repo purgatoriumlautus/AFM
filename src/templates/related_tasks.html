@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" integrity="sha512-dy8twfI2rYdtmdWlKQh1fJ0Ylo6vXILcoTq9mcptNheIqlO0Dsc8kZb0ztldFrb7JtB9vTv6D6hdO8zl+7bqg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <title>View Tasks</title>
+    <style>
+        .navbar .nav-link.vr {
+            color: #4e8fcc; background-color: #d7e1f3;
+        }
+        .task-card {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 16px;
+            background-color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .task-card .task-info {
+            display: flex;
+            justify-content: center;
+        }
+        .task-card .task-info p {
+            margin: 0;
+        }
+        .task-card .task-info .task-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .task-info .text-truncate {
+            width: 200px;
+            max-width: 200px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 0px;
+        }
+        .gap-2 {
+            gap: 8px;
+        }
+        .badge{
+            font-size: 0.875rem;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: normal;
+        }
+        .nonstr {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .inpr{
+            background-color: #cde4ff;
+            color: #02468f;
+        }
+        .done {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .delete-btn {
+            color: #dc3545;
+            font-size: 1.25rem;
+            cursor: pointer;
+        }
+        .delete-btn:hover {
+            color: #c82333;
+        }
+        .edit-btn, .end-btn {
+            font-size: 1.25rem;
+            cursor: pointer;
+        }
+        .edit-btn:hover, .end-btn:hover {
+            color: #007bff;
+        }
+         #assignedAgents {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        #assignedAgents .badge {
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            padding: 0.4rem 0.8rem;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+
+        .offcanvas-body {
+            padding-top: 20px;
+            padding-bottom: 20px;
+        }
+
+    </style>
+</head>
+<body>
+{% include "navbar.html" %}
+<div class="container mt-4">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="alert alert-{{ messages[0][0] }} mt-3">
+                {{ messages[0][1] }}
+            </div>
+        {% endif %}
+    {% endwith %}
+</div>
+<div class="container my-5">
+   <h5 class="text-center my-4">Tasks related to {{ task.name }}</h5>
+    <form method="GET" action="{{ url_for('task.related_tasks', task_id=task.id) }}" class="row mb-4">
+
+        <div class="col-md-2">
+            <label for="status" class="form-label">Filter by Status</label>
+            <select name="status" id="status" class="form-select">
+                <option value="">All</option>
+                <option value="Not Started" {% if status == "Not Started" %}selected{% endif %}>Not Started</option>
+                <option value="In Process" {% if status == "In Process" %}selected{% endif %}>In Process</option>
+                <option value="Done" {% if status == "Done" %}selected{% endif %}>Done</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label for="sort" class="form-label">Sort by Date</label>
+            <select name="sort" id="sort" class="form-select">
+                <option value="newest" {% if sort == "newest" %}selected{% endif %}>Newest First</option>
+                <option value="oldest" {% if sort == "oldest" %}selected{% endif %}>Oldest First</option>
+            </select>
+        </div>
+
+        <div class="col-md-1 d-flex align-items-end">
+            <button type="submit" class="btn btn-dark w-100">Filter</button>
+        </div>
+    </form>
+
+ {% for item in related_tasks %}
+    <div class="task-card">
+        <div class="task-info" style="margin-right: 20px">
+            <div>
+                <p class="task-name">{{ item.name }}</p>
+            </div>
+
+            <div style="margin-left: 20px">
+                <p class="text-truncate">{{ item.description or 'No Description' }}</p>
+            </div>
+        </div>
+
+        <div class="d-flex align-items-center">
+            <span class="badge
+                {% if item.status == 'Not Started' %}nonstr{% elif item.status == 'In Process' %}inpr{% else %}done{% endif %}">{{ item.status }}</span>
+        </div>
+    {% if item.reports %}
+        <div>
+            <a href="{{ url_for('report.manage_report', report_id=item.reports[0].id) }}" style=" text-decoration: none;">Link to associated report</a>
+        </div>
+    {% endif %}
+        <div class="d-flex align-items-center gap-2">
+             <a href="#" data-bs-toggle="offcanvas" data-bs-target="#TaskOffcanvas{{ item.id }}">
+               <i class="bi bi-three-dots-vertical" style="color: black"></i>
+            </a>
+
+        </div>
+    </div>
+
+    <div class="offcanvas offcanvas-end" tabindex="1" id="TaskOffcanvas{{ item.id }}" aria-labelledby="editTaskOffcanvasLabel">
+        <div class="offcanvas-header">
+            <h5 id="editTaskOffcanvasLabel">Task Details</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body">
+            <p>{{ item.name }}</p>
+            <h6>Description:</h6>
+            <p>{{ item.description or 'No Description' }}</p>
+
+            <h6>Status:</h6>
+            <p>{{ item.status }}</p>
+            <div>
+        </div>
+               <h6>Assigned Agents:</h6>
+              <div id="assignedAgents">
+                {% for agent in related_agents[item.id] %}
+                    <span class="badge">{{ agent }}</span>
+                {% endfor %}
+            </div>
+
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+
+</body>
+</html>

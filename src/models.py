@@ -2,6 +2,7 @@ from flask_login import UserMixin
 from src.db import db
 from datetime import datetime
 import os
+from sqlalchemy import Index
 
 sup_email = os.getenv("ADMIN_EMAIL")
 
@@ -32,7 +33,12 @@ class User(db.Model, UserMixin):
     )
 
     __table_args__ = (
-        db.UniqueConstraint('organisation_id', 'is_owner', name='unique_owner_organisation'),
+        Index(
+            'unique_owner_organisation',  # Name of the index
+            'organisation_id',
+            unique=True,
+            postgresql_where=db.text("is_owner = TRUE"),  # Apply the condition here
+        ),
     )
 
     def __init__(self, username=None, password=None, email=None, is_owner=False, organisation_id=None,

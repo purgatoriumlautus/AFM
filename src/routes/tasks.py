@@ -180,3 +180,117 @@ def delete_task(task_id):
         db.session.commit()
         flash('Task deleted successfully!', 'success')
         return redirect(url_for('task.view_tasks'))
+
+@task.route('/agents/view_tasks', methods=['GET'])
+@login_required
+def agent_view_tasks():
+    agent = Agent.query.filter_by(user_id=current_user.uid).first()
+    if not agent:
+        flash('You are not authorized to view this page.', 'danger')
+        return redirect(url_for('main.index'))
+
+    status_filter = request.args.get('status')
+    sort_filter = request.args.get('sort')
+    query = db.session.query(Task).join(agent_task).filter(agent_task.c.agent_id == agent.id)
+
+    if status_filter:
+        query = query.filter(Task.status == status_filter)
+
+    if sort_filter == "newest":
+        query = query.order_by(Task.created_at.desc())
+    elif sort_filter == "oldest":
+        query = query.order_by(Task.created_at.asc())
+
+    assigned_tasks = query.all()
+
+    tasks_with_related = []
+    for task in assigned_tasks:
+
+        related_tasks = Task.query.join(Task.reports).filter(
+            Report.id.in_([report.id for report in task.reports]),
+            Task.id != task.id
+        ).all()
+        agents = [agent.user.username for agent in task.agents]
+
+        tasks_with_related.append({
+            'task': task,
+            'agents': agents,
+            'related_tasks': related_tasks
+        })
+
+    return render_template('agent_view_tasks.html', tasks_with_related=tasks_with_related,
+                           status=status_filter, sort=sort_filter)
+
+
+@task.route('/tasks/change_status/<int:task_id>', methods=['POST'])
+@login_required
+def change_status(task_id):
+    task = Task.query.get(task_id)
+    if not task:
+        flash('Task not found', 'danger')
+        return redirect(url_for('task.agent_view_tasks'))
+    agent = Agent.query.filter_by(user_id=current_user.uid).first()
+    if agent:
+        status_filter = request.args.get('status')
+        sort_filter = request.args.get('sort')
+
+        query = db.session.query(Task).join(agent_task).filter(agent_task.c.agent_id == agent.id)
+
+        if status_filter:
+            query = query.filter(Task.status == status_filter)
+
+        if sort_filter == "newest":
+            query = query.order_by(Task.created_at.desc())
+        elif sort_filter == "oldest":
+            query = query.order_by(Task.created_at.asc())
+
+        assigned_tasks = query.all()
+
+        tasks_with_related = []
+        for task in assigned_tasks:
+            related_tasks = Task.query.join(Task.reports).filter(
+                Report.id.in_([report.id for report in task.reports]),
+                Task.id != task.id
+            ).all()
+            agents = [agent.user.username for agent in task.agents]
+
+            tasks_with_related.append({
+                'task': task,
+                'agents': agents,
+                'related_tasks': related_tasks
+            })
+        task.status = 'In Process'
+        db.session.commit()
+        return render_template('agent_view_tasks.html', tasks_with_related=tasks_with_related,
+                               status=status_filter, sort=sort_filter)
+
+
+@task.route('/tasks/related_tasks/<int:task_id>', methods=['POST', 'GET'])
+@login_required
+def related_tasks(task_id):
+    agent = Agent.query.filter_by(user_id=current_user.uid).first()
+    if not agent:
+        flash('You are not authorized to view this page.', 'danger')
+        return redirect(url_for('main.index'))
+    task = Task.query.get(task_id)
+    status_filter = request.args.get('status')
+    sort_filter = request.args.get('sort')
+
+    related_tasks = Task.query.join(Task.reports).filter(
+        Report.id.in_([report.id for report in task.reports]),
+        Task.id != task.id  # Ensure we're not selecting the same task
+    ).all()
+
+    related_agents = {}
+    for related_task in related_tasks:
+        related_agents[related_task.id] = [agent.user.username for agent in related_task.agents]
+
+    if sort_filter == "newest":
+        related_tasks = sorted(related_tasks, key=lambda t: t.created_at, reverse=True)
+    elif sort_filter == "oldest":
+        related_tasks = sorted(related_tasks, key=lambda t: t.created_at, reverse=False)
+    elif sort_filter == "status":
+        related_tasks = sorted(related_tasks, key=lambda t: t.status)
+
+    return render_template('related_tasks.html', related_tasks=related_tasks, related_agents = related_agents,
+                           status=status_filter, sort=sort_filter, task = task)
