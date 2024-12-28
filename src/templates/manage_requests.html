@@ -114,15 +114,14 @@
 </div>
 <div class="container my-5">
 
-    <form method="GET" action="{{ url_for('task.agent_view_tasks') }}" class="row mb-4">
-
-        <div class="col-md-2">
-            <label for="status" class="form-label">Filter by Status</label>
-            <select name="status" id="status" class="form-select">
+    <form method="GET" action="{{ url_for('task.manage_requests') }}" class="row mb-4">
+ <div class="col-md-2">
+            <label for="organization" class="form-label">Filter by Organization</label>
+            <select name="organisation" id="organisation" class="form-select">
                 <option value="">All</option>
-                <option value="Not Started" {% if status == "Not Started" %}selected{% endif %}>Not Started</option>
-                <option value="In Process" {% if status == "In Process" %}selected{% endif %}>In Process</option>
-                <option value="Done" {% if status == "Done" %}selected{% endif %}>Done</option>
+                {% for org in organisations %}
+                    <option value="{{ org.id }}" {% if organisation == org.id %}selected{% endif %}>{{ org.name }}</option>
+                {% endfor %}
             </select>
         </div>
         <div class="col-md-2">
@@ -138,64 +137,63 @@
         </div>
     </form>
 
-    {% for item in tasks_with_related %}
+       {% for request in requests %}
     <div class="task-card">
         <div class="task-info" style="margin-right: 20px">
             <div>
-                <p class="task-name">{{ item.task.name }}</p>
+                <p class="task-name">{{request.task.name }}</p>
             </div>
 
             <div style="margin-left: 20px">
-                <p class="text-truncate">{{ item.task.description or 'No Description' }}</p>
+                <p class="text-truncate">{{ request.task.description or 'No Description' }}</p>
             </div>
-        </div>
 
-        <div class="d-flex align-items-center">
-            <span class="badge
-                {% if item.task.status == 'Not Started' %}nonstr{% elif item.task.status == 'In Process' %}inpr{% else %}done{% endif %}">{{ item.task.status }}</span>
+        <div style="margin-left: 20px">
+           <p class="text-truncate">{{ request.task.creator.user.organisation.name}}</p>
         </div>
-    {% if item.task.reports %}
+        </div>
+    {% if request.task.reports %}
         <div>
-            <a href="{{ url_for('report.manage_report', report_id=item.task.reports[0].id) }}" style=" text-decoration: none;">Link to associated report</a>
+            <a href="{{ url_for('report.manage_report', report_id=request.task.reports[0].id) }}" style=" text-decoration: none;">Link to associated report</a>
         </div>
     {% endif %}
-        <div class="d-flex align-items-center gap-2">
-            {% if item.task.status == 'Not Started' %}
-            <form method="POST" action="{{ url_for('task.change_status', task_id=item.task.id) }}" style="display:inline;">
-                <input type="hidden" name="action" value="end">
-                <button type="submit" class="btn end-btn" title="Start Task">
-                 <i class="bi bi-rocket-takeoff"></i> Start Task
-                </button>
-            </form>
-            {% endif %}
-             <a href="#" data-bs-toggle="offcanvas" data-bs-target="#TaskOffcanvas{{ item.task.id }}">
+     <div class="d-flex align-items-center gap-1">
+        <form method="POST" action="{{ url_for('task.manage_request', request_id=request.id) }}" class="d-inline">
+    <input type="hidden" name="action" value="approve">
+    <button type="submit" style="border: none; background: none; cursor: pointer;">
+        <i class="bi bi-check2" style="color: darkgreen; font-size: 30px"></i>
+    </button>
+</form>
+<form method="POST" action="{{ url_for('task.manage_request', request_id=request.id) }}" class="d-inline">
+    <input type="hidden" name="action" value="reject">
+    <button type="submit" style="border: none; background: none; cursor: pointer;">
+        <i class="bi bi-x-lg" style="color: darkred; font-size: 23px"></i>
+    </button>
+</form>
+      <a href="#" data-bs-toggle="offcanvas" data-bs-target="#TaskOffcanvas">
                <i class="bi bi-three-dots-vertical" style="color: black"></i>
             </a>
-
-        </div>
     </div>
 
-    <div class="offcanvas offcanvas-end" tabindex="1" id="TaskOffcanvas{{ item.task.id }}" aria-labelledby="editTaskOffcanvasLabel">
+
+    <div class="offcanvas offcanvas-end" tabindex="1" id="TaskOffcanvas" aria-labelledby="editTaskOffcanvasLabel">
         <div class="offcanvas-header">
             <h5 id="editTaskOffcanvasLabel">Task Details</h5>
             <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
         </div>
         <div class="offcanvas-body">
-            <p>{{ item.task.name }}</p>
+            <p>{{ request.task.name }}</p>
             <h6>Description:</h6>
-            <p>{{ item.task.description or 'No Description' }}</p>
+            <p>{{ request.task.description or 'No Description' }}</p>
 
             <h6>Status:</h6>
-            <p>{{ item.task.status }}</p>
+            <p>{{ request.task.status }}</p>
             <div>
                 <h6>Assigned Agents:</h6>
             <div id="assignedAgents">
-                {% for agent in item.task.agents %}
+                {% for agent in request.task.agents %}
                     <span class="badge">{{ agent.user.username }}</span>
                 {% endfor %}
-            </div>
-<br><div>
-                <a href="{{ url_for('task.related_tasks', task_id=item.task.id) }}" style="text-decoration: none;">Link to related tasks</a>
             </div>
         </div>
 

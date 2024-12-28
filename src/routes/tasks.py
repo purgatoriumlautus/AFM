@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_required, current_user
 from src.db import db
-from src.models import Manager, Task, Report, Agent, TaskRequest, agent_task
+from src.models import Manager, Task, Report, Agent, TaskRequest, agent_task, User, Organisation
 from sqlalchemy.orm import joinedload
 from geopy.geocoders import Nominatim
 task = Blueprint('task', __name__)
@@ -85,9 +85,11 @@ def create_task(report_id):
 
         return render_template('create_task.html', report=report, my_agents=in_org, other_agents=not_org,
                                current_organisation_id=current_organisation_id, location=address)
+    flash("You are not authorized to view this page.", "danger")
+    return redirect(url_for('main.mainpage'))
 
 
-#to be done
+
 @task.route('/view_tasks')
 @login_required
 def view_tasks():
@@ -96,6 +98,7 @@ def view_tasks():
     current_organisation_id = current_user.organisation_id
     agents = Agent.query.all()
     manager = Manager.query.filter_by(user_id=current_user.uid).first()
+
     if manager:
         in_org = []
         not_org = []
@@ -104,37 +107,65 @@ def view_tasks():
                 in_org.append(agent)
             else:
                 not_org.append(agent)
-
         tasks_query = Task.query.options(joinedload(Task.agents))
 
         if status:
             tasks_query = tasks_query.filter_by(status=status)
+
+        tasks_query = tasks_query.filter_by(creator_id=manager.id)
+
         if sort == 'newest':
             tasks_query = tasks_query.order_by(Task.created_at.desc())
         else:
             tasks_query = tasks_query.order_by(Task.created_at.asc())
 
         tasks = tasks_query.all()
+        task_data = []
+        for task in tasks:
+            task_agents = []
+            assigned_agents = {agent.id: agent for agent in task.agents}
+            task_requests = TaskRequest.query.filter_by(task_id=task.id).all()
+            requested_agents = {request.agent.id: request.agent for request in task_requests}
+            for agent in in_org:
+                if agent.id in assigned_agents:
+                    task_agents.append({"agent": assigned_agents[agent.id], "status": "current"})
+                elif agent.id in requested_agents:
+                    task_agents.append({"agent": requested_agents[agent.id], "status": "requested"})
 
-        return render_template('view_tasks.html',
-                               tasks=tasks,
-                               status=status,
-                               sort=sort,
-                               current_organisation_id=current_organisation_id,
-                               my_agents=in_org,
-                               other_agents=not_org)
+            for agent in not_org:
+                if agent.id in assigned_agents:
+                    task_agents.append({"agent": assigned_agents[agent.id], "status": "current"})
+                elif agent.id in requested_agents:
+                    task_agents.append({"agent": requested_agents[agent.id], "status": "requested"})
+
+            task_data.append({"task": task, "agents": task_agents})
+
+        return render_template(
+            'view_tasks.html',
+            tasks=task_data,
+            my_agents=in_org,
+            other_agents=not_org,
+            status=status,
+            sort=sort
+        )
+    else:
+        flash("You are not authorized to view this page.", "danger")
+        return redirect(url_for('index'))
 
 
-@task.route('/task/edit/<int:task_id>', methods=['GET', 'POST'])
+@task.route('/task/edit/<int:task_id>', methods=['POST'])
 @login_required
 def update_task(task_id):
     task = Task.query.get_or_404(task_id)
     manager = Manager.query.filter_by(user_id=current_user.uid).first()
     if manager:
+        manager_organization = manager.user.organisation_id
+
         if request.method == 'POST':
             task.name = request.form.get('name', task.name)
             task.description = request.form.get('description', task.description)
             task.status = request.form.get('status', task.status)
+
             selected_agents_ids = set(map(int, request.form.getlist("agents[]")))
             current_agents_ids = {agent.id for agent in task.agents}
 
@@ -148,13 +179,18 @@ def update_task(task_id):
             for agent_id in agents_to_add:
                 agent = Agent.query.get(agent_id)
                 if agent:
-                    task.agents.append(agent)
+                    if agent.user.organisation_id != manager_organization:
+                        new_request = TaskRequest(task_id=task.id, agent_id=agent.id)
+                        db.session.add(new_request)
+                    else:
+                        task.agents.append(agent)
 
             db.session.commit()
             flash('Task updated successfully!', 'success')
             return redirect(url_for('task.view_tasks'))
 
-        return render_template('task/edit_task.html', task=task)
+    flash("You are not authorized to view this page.", "danger")
+    return redirect(url_for('main.mainpage'))
 
 
 @task.route('/task/end/<int:task_id>', methods=['POST'])
@@ -167,7 +203,8 @@ def end_task(task_id):
         db.session.commit()
         flash('Task ended successfully!', 'success')
         return redirect(url_for('task.view_tasks'))
-
+    flash("You are not authorized to view this page.", "danger")
+    return redirect(url_for('main.mainpage'))
 
 # Delete Task
 @task.route('/task/delete/<int:task_id>', methods=['POST'])
@@ -180,6 +217,8 @@ def delete_task(task_id):
         db.session.commit()
         flash('Task deleted successfully!', 'success')
         return redirect(url_for('task.view_tasks'))
+    flash("You are not authorized to view this page.", "danger")
+    return redirect(url_for('main.mainpage'))
 
 @task.route('/agents/view_tasks', methods=['GET'])
 @login_required
@@ -204,22 +243,22 @@ def agent_view_tasks():
     assigned_tasks = query.all()
 
     tasks_with_related = []
+
     for task in assigned_tasks:
 
         related_tasks = Task.query.join(Task.reports).filter(
             Report.id.in_([report.id for report in task.reports]),
             Task.id != task.id
         ).all()
-        agents = [agent.user.username for agent in task.agents]
 
         tasks_with_related.append({
             'task': task,
-            'agents': agents,
             'related_tasks': related_tasks
         })
 
     return render_template('agent_view_tasks.html', tasks_with_related=tasks_with_related,
                            status=status_filter, sort=sort_filter)
+
 
 
 @task.route('/tasks/change_status/<int:task_id>', methods=['POST'])
@@ -263,34 +302,96 @@ def change_status(task_id):
         db.session.commit()
         return render_template('agent_view_tasks.html', tasks_with_related=tasks_with_related,
                                status=status_filter, sort=sort_filter)
+    flash("You are not authorized to view this page.", "danger")
+    return redirect(url_for('main.mainpage'))
 
 
 @task.route('/tasks/related_tasks/<int:task_id>', methods=['POST', 'GET'])
 @login_required
 def related_tasks(task_id):
     agent = Agent.query.filter_by(user_id=current_user.uid).first()
-    if not agent:
-        flash('You are not authorized to view this page.', 'danger')
-        return redirect(url_for('main.index'))
-    task = Task.query.get(task_id)
-    status_filter = request.args.get('status')
-    sort_filter = request.args.get('sort')
+    if agent:
+        task = Task.query.get(task_id)
+        status_filter = request.args.get('status')
+        sort_filter = request.args.get('sort')
 
-    related_tasks = Task.query.join(Task.reports).filter(
-        Report.id.in_([report.id for report in task.reports]),
-        Task.id != task.id  # Ensure we're not selecting the same task
-    ).all()
+        related_tasks = Task.query.join(Task.reports).filter(
+            Report.id.in_([report.id for report in task.reports]),
+            Task.id != task.id  # Ensure we're not selecting the same task
+        ).all()
 
-    related_agents = {}
-    for related_task in related_tasks:
-        related_agents[related_task.id] = [agent.user.username for agent in related_task.agents]
+        related_agents = {}
+        for related_task in related_tasks:
+            related_agents[related_task.id] = [agent.user.username for agent in related_task.agents]
 
-    if sort_filter == "newest":
-        related_tasks = sorted(related_tasks, key=lambda t: t.created_at, reverse=True)
-    elif sort_filter == "oldest":
-        related_tasks = sorted(related_tasks, key=lambda t: t.created_at, reverse=False)
-    elif sort_filter == "status":
-        related_tasks = sorted(related_tasks, key=lambda t: t.status)
+        if sort_filter == "newest":
+            related_tasks = sorted(related_tasks, key=lambda t: t.created_at, reverse=True)
+        elif sort_filter == "oldest":
+            related_tasks = sorted(related_tasks, key=lambda t: t.created_at, reverse=False)
+        elif sort_filter == "status":
+            related_tasks = sorted(related_tasks, key=lambda t: t.status)
 
-    return render_template('related_tasks.html', related_tasks=related_tasks, related_agents = related_agents,
-                           status=status_filter, sort=sort_filter, task = task)
+        return render_template('related_tasks.html', related_tasks=related_tasks, related_agents = related_agents,
+                               status=status_filter, sort=sort_filter, task = task)
+    flash("You are not authorized to view this page.", "danger")
+    return redirect(url_for('main.mainpage'))
+
+@task.route('/manage_requests', methods=['GET', 'POST'])
+@login_required
+def manage_requests():
+    agent = Agent.query.filter_by(user_id=current_user.uid).first()
+
+    if agent:
+        organisation_id = request.args.get('organisation')
+        sort_order = request.args.get('sort')
+        query = (
+            TaskRequest.query
+            .join(Task)
+            .join(Manager, Task.creator_id == Manager.id)
+            .join(User, Manager.user_id == User.uid)
+            .join(Organisation, User.organisation_id == Organisation.id)
+        )
+        query = query.filter(TaskRequest.agent_id == agent.id)
+        if organisation_id:
+            query = query.filter(Organisation.id == organisation_id)
+        if sort_order == 'newest':
+            query = query.order_by(TaskRequest.created_at.desc())  # Newest first
+        elif sort_order == 'oldest':
+            query = query.order_by(TaskRequest.created_at.asc())
+        requests = query.all()
+        organisations = Organisation.query.all()
+        return render_template('manage_requests.html', requests=requests, organisations=organisations, organisation=organisation_id)
+    flash("You are not authorized to view this page.", "danger")
+    return redirect(url_for('main.mainpage'))
+
+@task.route('/manage_request/<int:request_id>', methods=['POST'])
+@login_required
+def manage_request(request_id):
+    agent = Agent.query.filter_by(user_id=current_user.uid).first()
+
+    if agent:
+
+        task_request = TaskRequest.query.get_or_404(request_id)
+
+        if task_request.agent_id != agent.id:
+            flash("You do not have permission to manage this request.", 'danger')
+            return redirect(url_for('task.manage_requests'))
+
+        action = request.form['action']
+
+        if action == 'approve':
+            task_request.approved = True
+            task = task_request.task
+            task.agents.append(agent)
+            db.session.delete(task_request)
+            db.session.commit()
+            flash(f"Request approved! {agent.user.username} has been assigned to the task.", 'success')
+
+        elif action == 'reject':
+            db.session.delete(task_request)
+            db.session.commit()
+            flash("Request rejected and deleted.", 'danger')
+
+        return redirect(url_for('task.manage_requests'))
+    flash("You are not authorized to view this page.", "danger")
+    return redirect(url_for('main.mainpage'))
