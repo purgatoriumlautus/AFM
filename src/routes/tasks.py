@@ -158,6 +158,7 @@ def view_tasks():
 def update_task(task_id):
     task = Task.query.get_or_404(task_id)
     manager = Manager.query.filter_by(user_id=current_user.uid).first()
+
     if manager:
         manager_organization = manager.user.organisation_id
 
@@ -165,25 +166,32 @@ def update_task(task_id):
             task.name = request.form.get('name', task.name)
             task.description = request.form.get('description', task.description)
             task.status = request.form.get('status', task.status)
-
+            current_agents_in_task = {agent.id for agent in task.agents}
+            current_agents_in_request = {task_request.agent_id for task_request in TaskRequest.query.filter_by(task_id=task.id).all()}
             selected_agents_ids = set(map(int, request.form.getlist("agents[]")))
-            current_agents_ids = {agent.id for agent in task.agents}
-
-            agents_to_remove = current_agents_ids - selected_agents_ids
-            for agent_id in agents_to_remove:
+            agents_to_remove_from_task = current_agents_in_task - selected_agents_ids
+            for agent_id in agents_to_remove_from_task:
                 agent = Agent.query.get(agent_id)
                 if agent:
                     task.agents.remove(agent)
+            agents_to_remove_from_request = current_agents_in_request - selected_agents_ids
+            for agent_id in agents_to_remove_from_request:
+                task_request = TaskRequest.query.filter_by(task_id=task.id, agent_id=agent_id).first()
+                if task_request:
+                    db.session.delete(task_request)
 
-            agents_to_add = selected_agents_ids - current_agents_ids
+            agents_to_add = selected_agents_ids - current_agents_in_task - current_agents_in_request
             for agent_id in agents_to_add:
                 agent = Agent.query.get(agent_id)
                 if agent:
                     if agent.user.organisation_id != manager_organization:
                         new_request = TaskRequest(task_id=task.id, agent_id=agent.id)
-                        db.session.add(new_request)
+                        existing_request = TaskRequest.query.filter_by(task_id=task.id, agent_id=agent.id).first()
+                        if not existing_request:
+                            db.session.add(new_request)
                     else:
-                        task.agents.append(agent)
+                        if agent.id not in current_agents_in_task:
+                            task.agents.append(agent)
 
             db.session.commit()
             flash('Task updated successfully!', 'success')
@@ -270,9 +278,10 @@ def change_status(task_id):
         return redirect(url_for('task.agent_view_tasks'))
     agent = Agent.query.filter_by(user_id=current_user.uid).first()
     if agent:
+        task.status = 'In Process'
+        db.session.commit()
         status_filter = request.args.get('status')
         sort_filter = request.args.get('sort')
-
         query = db.session.query(Task).join(agent_task).filter(agent_task.c.agent_id == agent.id)
 
         if status_filter:
@@ -282,9 +291,7 @@ def change_status(task_id):
             query = query.order_by(Task.created_at.desc())
         elif sort_filter == "oldest":
             query = query.order_by(Task.created_at.asc())
-
         assigned_tasks = query.all()
-
         tasks_with_related = []
         for task in assigned_tasks:
             related_tasks = Task.query.join(Task.reports).filter(
@@ -298,10 +305,9 @@ def change_status(task_id):
                 'agents': agents,
                 'related_tasks': related_tasks
             })
-        task.status = 'In Process'
-        db.session.commit()
         return render_template('agent_view_tasks.html', tasks_with_related=tasks_with_related,
                                status=status_filter, sort=sort_filter)
+
     flash("You are not authorized to view this page.", "danger")
     return redirect(url_for('main.mainpage'))
 
