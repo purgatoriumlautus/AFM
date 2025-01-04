@@ -77,7 +77,6 @@ def create_organisation():
             return redirect(url_for('auth.login'))
 
         organisation_name = request.form.get('organisation_name')
-
         if not organisation_name:
             flash("Organization name is required.", "danger")
             return redirect(url_for('admin.create_organisation'))  # Redirect back to create page
