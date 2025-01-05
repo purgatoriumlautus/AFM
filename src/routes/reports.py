@@ -99,6 +99,7 @@ def manage_report(report_id):
     super_admin = is_super_admin()
     manager = Manager.query.filter_by(user_id=current_user.uid).first()
     urgency = report.get_urgency()
+    creator = User.query.filter_by(uid=report.creator_id).first()
     if request.method == 'POST':
         if manager or super_admin:
 
@@ -124,7 +125,7 @@ def manage_report(report_id):
     geolocator = Nominatim(user_agent="AFM")
     loc = geolocator.reverse(f"{lat}, {lon}")
     address = loc.address if loc else ""
-    return render_template('report_details.html', current_user = current_user,report=report, manager=manager,is_super_admin=is_super_admin(), location = address,  urgency = urgency)
+    return render_template('report_details.html', current_user = current_user,report=report, manager=manager,is_super_admin=is_super_admin(), location = address,  urgency = urgency, creator_name = creator.username)
 
 
 @report.route("/score_report/<int:report_id>", methods=['GET', 'POST'])
