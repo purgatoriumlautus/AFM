@@ -52,7 +52,8 @@ def create_app():
     app.register_blueprint(report)
     app.register_blueprint(task)
     app.register_blueprint(admin)
-    app.register_blueprint(superadmin)
+    app.register_blueprint(superadmin, url_prefix='/superadmin')
+
 
 
     scheduler = APScheduler()

@@ -16,8 +16,11 @@ def is_super_admin():
 def mainpage():
     reports = Report.all_reports()
     if current_user.is_authenticated:
+        if current_user.is_banned:
+            return render_template('banned.html')
         return render_template('mainpage.html', reports=reports, current_user=current_user,
                                is_super_admin=is_super_admin())
+    
     else:
         return render_template('mainpage.html', reports=reports, current_user=current_user)
 

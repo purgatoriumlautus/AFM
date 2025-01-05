@@ -15,6 +15,7 @@ class User(db.Model, UserMixin):
     email = db.Column(db.String(100), nullable=False, unique=True)
     home_address = db.Column(db.String(100), nullable=True)
     is_owner = db.Column(db.Boolean, default=False)
+    is_banned = db.Column(db.Boolean, default=False)
     email_confirmed = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     organisation_id = db.Column(

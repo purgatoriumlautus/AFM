@@ -101,6 +101,11 @@ def initiate_db(app):
         )
         db.session.add(superadmin_user)
         db.session.commit()
+        
+        superadmin_manager = Manager(user_id=superadmin_user.uid, position='Superadmin Manager')
+        db.session.add(superadmin_manager)
+        db.session.commit()
+
 
         print(f"Superadmin created: {superadmin_user.username}, Email: {superadmin_user.email}")
 

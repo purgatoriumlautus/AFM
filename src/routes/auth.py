@@ -32,6 +32,10 @@ def login():
         return redirect(url_for('auth.login'))
     if user and bcrypt.check_password_hash(user.password, password):
         login_user(user)
+        if user.is_banned:
+            flash('Access restricted, you are banned!', 'danger')
+            return redirect(url_for('main.mainpage'))
+        
         flash('Logged in successfully!', 'success')
         return redirect(url_for('main.mainpage'))
     else:

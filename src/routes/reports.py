@@ -107,6 +107,7 @@ def manage_report(report_id):
             if action == 'approve':
                 report.is_approved = True
                 report.approver_id = manager.id
+
                 db.session.commit()
                 flash('Report approved successfully.', 'success')
 
@@ -114,6 +115,7 @@ def manage_report(report_id):
                 db.session.delete(report)
                 db.session.commit()
                 flash('Report deleted successfully.', 'success')
+            
             return redirect(url_for('report.view_reports'))
         else:
             flash('Access denied. Only managers can manage reports.', 'error')
