@@ -119,6 +119,12 @@ def manage_report(report_id):
                 report.status = 'OPEN'
                 db.session.commit()
                 flash('Report status changed to OPEN.', 'success')
+            elif action == 'delete':
+                for task in report.tasks:
+                    db.session.delete(task)
+                db.session.delete(report)
+                db.session.commit()
+                flash('Report deleted successfully.', 'success')
 
             return redirect(url_for('report.view_reports'))
 

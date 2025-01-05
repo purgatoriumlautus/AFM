@@ -180,12 +180,12 @@
     {% else %}Unknown{% endif %}
 </span>
 </div>
-    {% if task.reports %}
+
         <div >
-               <a href="{{ url_for('report.manage_report', report_id=task.reports[0].id) }}" style=" text-decoration: none;">Link to associated report</a>
+               <a href="{{ url_for('report.manage_report', report_id=task.task.reports[0].id) }}" style=" text-decoration: none;">Link to associated report</a>
 
         </div>
-        {% endif %}
+
         <div class="d-flex align-items-center gap-2">
 
 
