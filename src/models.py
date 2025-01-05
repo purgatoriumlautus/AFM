@@ -116,15 +116,15 @@ class Report(db.Model):
     photo_file = db.Column(db.String(100), nullable=True)
     creator_id = db.Column(db.Integer, db.ForeignKey('users.uid'), nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-    is_approved = db.Column(db.Boolean, default=False, nullable=False)
     approver_id = db.Column(db.Integer, db.ForeignKey('managers.id', ondelete="SET NULL"), nullable=True)
     average_score = db.Column(db.Float, default=0.0, nullable=False)
+    status = db.Column(db.String(50), default="", nullable=False)
 
     creator = db.relationship('User', back_populates='report')
     approver = db.relationship('Manager', backref='approved_reports')
     tasks = db.relationship('Task', secondary='task_report', back_populates='reports')
     def __init__(self, location, description, photo_file=None, creator_id=None, approver_id=None, is_approved=False,
-                 avarage_score=None, score_count=None):
+                 avarage_score=None, score_count=None, status = ""):
         self.location = location
         self.description = description
         self.photo_file = photo_file
@@ -132,6 +132,7 @@ class Report(db.Model):
         self.is_approved = is_approved
         self.average_score = avarage_score
         self.score_count = score_count
+        self.status = status
 
     @staticmethod
     def all_reports():
@@ -215,12 +216,12 @@ class Task(db.Model):
     description = db.Column(db.String(300), nullable=True)  # Add description column
     creator_id = db.Column(db.Integer, db.ForeignKey('managers.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    status = db.Column(db.String(50), default="Not Started", nullable=False)
+    status = db.Column(db.String(50), default="OPEN", nullable=False)
 
     creator = db.relationship('Manager', backref=db.backref('tasks', lazy='dynamic'))
     agents = db.relationship('Agent', secondary='agent_task', back_populates='tasks')
     reports = db.relationship('Report', secondary=task_report, back_populates='tasks')
-    def __init__(self, name, creator_id, description=None, created_at=None, status="Not Started"):
+    def __init__(self, name, creator_id, description=None, created_at=None, status="OPEN"):
         self.name = name
         self.description = description
         self.creator_id = creator_id

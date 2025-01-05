@@ -57,10 +57,12 @@ def view_reports():
         sort = request.args.get('sort')
 
         if status:
-            if status == "approved":
-                query = query.filter_by(is_approved=True)
-            elif status == "pending":
-                query = query.filter_by(is_approved=False)
+            if status == "OPEN":
+                query = query.filter_by(status="OPEN")
+            elif status == "RESOLVED":
+                query = query.filter_by(status="RESOLVED")
+            elif status == "PENDING":
+                query = query.filter_by(status="")
 
         if urgency:
             if urgency == "low":
@@ -94,39 +96,44 @@ def view_reports():
 @report.route('/view_reports/<int:report_id>', methods=['GET', 'POST'])
 @login_required
 def manage_report(report_id):
-
     report = Report.query.get_or_404(report_id)
-    super_admin = is_super_admin()
-    manager = Manager.query.filter_by(user_id=current_user.uid).first()
-    urgency = report.get_urgency()
-    creator = User.query.filter_by(uid=report.creator_id).first()
+    super_admin = is_super_admin()  # Check if the user is a super admin
+    manager = Manager.query.filter_by(user_id=current_user.uid).first()  # Get the manager
+    urgency = report.get_urgency()  # Get the urgency of the report
+    creator = User.query.filter_by(uid=report.creator_id).first()  # Get the creator of the report
+
     if request.method == 'POST':
         if manager or super_admin:
-
             action = request.form.get('action')
 
-            if action == 'approve':
-                report.is_approved = True
-                report.approver_id = manager.id
+            if action == 'resolve' and report.status == 'OPEN':
+                unresolved_tasks = [task for task in report.tasks if task.status != 'RESOLVED']
+                if unresolved_tasks:
+                    flash('Cannot resolve the report because there are unresolved tasks.', 'danger')
+                else:
+                    report.status = 'RESOLVED'
+                    db.session.commit()
+                    flash('Report marked as resolved.', 'success')
 
+            elif action == 'open' and report.status == 'RESOLVED' or report.status == '':
+                report.status = 'OPEN'
                 db.session.commit()
-                flash('Report approved successfully.', 'success')
+                flash('Report status changed to OPEN.', 'success')
 
-            elif action == 'delete':
-                db.session.delete(report)
-                db.session.commit()
-                flash('Report deleted successfully.', 'success')
-            
             return redirect(url_for('report.view_reports'))
+
         else:
             flash('Access denied. Only managers can manage reports.', 'error')
             return redirect(url_for('main.mainpage'))
+
     lat, lon = map(str.strip, report.location.split(','))
     geolocator = Nominatim(user_agent="AFM")
     loc = geolocator.reverse(f"{lat}, {lon}")
     address = loc.address if loc else ""
-    return render_template('report_details.html', current_user = current_user,report=report, manager=manager,is_super_admin=is_super_admin(), location = address,  urgency = urgency, creator_name = creator.username)
 
+    return render_template('report_details.html', current_user=current_user, report=report, manager=manager,
+                           is_super_admin=is_super_admin(), location=address, urgency=urgency,
+                           creator_name=creator.username)
 
 @report.route("/score_report/<int:report_id>", methods=['GET', 'POST'])
 @login_required

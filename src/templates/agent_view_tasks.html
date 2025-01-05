@@ -44,24 +44,37 @@
         .gap-2 {
             gap: 8px;
         }
-        .badge{
-            font-size: 0.875rem;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-weight: normal;
-        }
-        .nonstr {
-            background-color: #f8d7da;
-            color: #721c24;
-        }
-        .inpr{
-            background-color: #cde4ff;
-            color: #02468f;
-        }
-        .done {
-            background-color: #d4edda;
-            color: #155724;
-        }
+          .badge {
+    font-size: 0.875rem;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-weight: normal;
+}
+
+.open {
+    background-color: #fff3cd; /* Yellowish */
+    color: #856404;
+}
+
+.requires-clarification {
+    background-color: #ffe8e8; /* Light Red */
+    color: #b71c1c;
+}
+
+.in-progress {
+    background-color: #cce5ff; /* Light Blue */
+    color: #004085;
+}
+
+.resolved {
+    background-color: #d4edda; /* Light Green */
+    color: #155724;
+}
+
+.unknown {
+    background-color: #e2e3e5; /* Gray */
+    color: #6c757d;
+}
         .delete-btn {
             color: #dc3545;
             font-size: 1.25rem;
@@ -71,7 +84,7 @@
             color: #c82333;
         }
         .edit-btn, .end-btn {
-            font-size: 1.25rem;
+            font-size: 1.10rem;
             cursor: pointer;
         }
         .edit-btn:hover, .end-btn:hover {
@@ -118,12 +131,13 @@
 
         <div class="col-md-2">
             <label for="status" class="form-label">Filter by Status</label>
-            <select name="status" id="status" class="form-select">
+             <select name="status" id="status" class="form-select">
                 <option value="">All</option>
-                <option value="Not Started" {% if status == "Not Started" %}selected{% endif %}>Not Started</option>
-                <option value="In Process" {% if status == "In Process" %}selected{% endif %}>In Process</option>
-                <option value="Done" {% if status == "Done" %}selected{% endif %}>Done</option>
-            </select>
+                    <option value="OPEN" {% if status == "OPEN" %}selected{% endif %}>Open</option>
+    <option value="REQUIRES_CLASSIFICATION" {% if status == "REQUIRES_CLASSIFICATION" %}selected{% endif %}>Clarification required</option>
+    <option value="IN_PROGRESS" {% if status == "IN_PROGRESS" %}selected{% endif %}>In progress</option>
+    <option value="RESOLVED" {% if status == "RESOLVED" %}selected{% endif %}>Resolved</option>
+</select>
         </div>
         <div class="col-md-2">
             <label for="sort" class="form-label">Sort by Date</label>
@@ -152,7 +166,17 @@
 
         <div class="d-flex align-items-center">
             <span class="badge
-                {% if item.task.status == 'Not Started' %}nonstr{% elif item.task.status == 'In Process' %}inpr{% else %}done{% endif %}">{{ item.task.status }}</span>
+    {% if item.task.status == 'OPEN' %}open
+    {% elif item.task.status == 'REQUIRES_CLARIFICATION' %}requires-clarification
+    {% elif item.task.status == 'IN_PROGRESS' %}in-progress
+    {% elif item.task.status == 'RESOLVED' %}resolved
+    {% else %}unknown{% endif %}">
+    {% if item.task.status == 'OPEN' %}Open
+    {% elif item.task.status == 'REQUIRES_CLARIFICATION' %}Clarification required
+    {% elif item.task.status == 'IN_PROGRESS' %}In Progress
+    {% elif item.task.status == 'RESOLVED' %}Resolved
+    {% else %}Unknown{% endif %}
+</span>
         </div>
     {% if item.task.reports %}
         <div>
@@ -160,14 +184,33 @@
         </div>
     {% endif %}
         <div class="d-flex align-items-center gap-2">
-            {% if item.task.status == 'Not Started' %}
-            <form method="POST" action="{{ url_for('task.change_status', task_id=item.task.id) }}" style="display:inline;">
-                <input type="hidden" name="action" value="end">
-                <button type="submit" class="btn end-btn" title="Start Task">
-                 <i class="bi bi-rocket-takeoff"></i> Start Task
-                </button>
-            </form>
-            {% endif %}
+             {% if item.task.status == 'OPEN' or item.task.status == 'REQUIRES_CLARIFICATION' %}
+<form method="POST" action="{{ url_for('task.change_status', task_id=item.task.id) }}" style="display:inline;">
+    <input type="hidden" name="new_status" value="IN_PROGRESS">
+    <button type="submit"  class="btn end-btn">
+        <i class="bi bi-rocket-takeoff"></i> Start Task
+    </button>
+</form>
+{% endif %}
+
+{% if item.task.status == 'IN_PROGRESS' %}
+<form method="POST" action="{{ url_for('task.change_status', task_id=item.task.id) }}" style="display:inline;">
+    <input type="hidden" name="new_status" value="RESOLVED">
+    <button type="submit"  class="btn end-btn" >
+       <i class="bi bi-flag-fill" style="color: #a91c1c"></i>  Resolve task
+    </button>
+</form>
+{% endif %}
+
+{% if item.task.status == 'OPEN' or item.task.status == 'IN_PROGRESS' %}
+<form method="POST" action="{{ url_for('task.change_status', task_id=item.task.id) }}" style="display:inline;">
+    <input type="hidden" name="new_status" value="REQUIRES_CLARIFICATION">
+    <button type="submit" class="btn end-btn">
+        <i class="bi bi-question-circle"></i> Require Clarification
+    </button>
+</form>
+{% endif %}
+
              <a href="#" data-bs-toggle="offcanvas" data-bs-target="#TaskOffcanvas{{ item.task.id }}">
                <i class="bi bi-three-dots-vertical" style="color: black"></i>
             </a>
@@ -186,7 +229,19 @@
             <p>{{ item.task.description or 'No Description' }}</p>
 
             <h6>Status:</h6>
-            <p>{{ item.task.status }}</p>
+            <p>
+    {% if item.task.status == 'OPEN' %}
+        Open
+    {% elif item.task.status == 'REQUIRES_CLARIFICATION' %}
+        Clarification required
+    {% elif item.task.status == 'IN_PROGRESS' %}
+        In Progress
+    {% elif item.task.status == 'RESOLVED' %}
+        Resolved
+    {% else %}
+        Unknown
+    {% endif %}
+</p>
             <div>
                 <h6>Assigned Agents:</h6>
             <div id="assignedAgents">

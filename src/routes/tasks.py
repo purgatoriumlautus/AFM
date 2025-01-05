@@ -39,9 +39,7 @@ def create_task(report_id):
             task_description = request.form.get('description')
             selected_agents_ids = request.form.getlist('agents')
 
-            if not selected_agents_ids:
-                flash("No agents selected.", "danger")
-                return redirect(request.url)
+
 
             if not task_name or not task_description:
                 flash("Please fill in all fields.", "danger")
@@ -51,7 +49,7 @@ def create_task(report_id):
                 name=task_name,
                 description=task_description,
                 creator_id=manager.id,
-                status= "Not Started"
+                status= "OPEN"
             )
 
             db.session.add(new_task)
@@ -201,20 +199,6 @@ def update_task(task_id):
     return redirect(url_for('main.mainpage'))
 
 
-@task.route('/task/end/<int:task_id>', methods=['POST'])
-@login_required
-def end_task(task_id):
-    manager = Manager.query.filter_by(user_id=current_user.uid).first()
-    if manager:
-        task = Task.query.get_or_404(task_id)
-        task.status = 'Done'
-        db.session.commit()
-        flash('Task ended successfully!', 'success')
-        return redirect(url_for('task.view_tasks'))
-    flash("You are not authorized to view this page.", "danger")
-    return redirect(url_for('main.mainpage'))
-
-# Delete Task
 @task.route('/task/delete/<int:task_id>', methods=['POST'])
 @login_required
 def delete_task(task_id):
@@ -227,6 +211,7 @@ def delete_task(task_id):
         return redirect(url_for('task.view_tasks'))
     flash("You are not authorized to view this page.", "danger")
     return redirect(url_for('main.mainpage'))
+
 
 @task.route('/agents/view_tasks', methods=['GET'])
 @login_required
@@ -268,7 +253,6 @@ def agent_view_tasks():
                            status=status_filter, sort=sort_filter)
 
 
-
 @task.route('/tasks/change_status/<int:task_id>', methods=['POST'])
 @login_required
 def change_status(task_id):
@@ -276,10 +260,24 @@ def change_status(task_id):
     if not task:
         flash('Task not found', 'danger')
         return redirect(url_for('task.agent_view_tasks'))
+
     agent = Agent.query.filter_by(user_id=current_user.uid).first()
     if agent:
-        task.status = 'In Process'
+        new_status = request.form.get('new_status')
+
+        if new_status == 'IN_PROGRESS' and task.status in ['OPEN', 'REQUIRES_CLARIFICATION']:
+            task.status = 'IN_PROGRESS'
+        elif new_status == 'RESOLVED' and task.status == 'IN_PROGRESS':
+            task.status = 'RESOLVED'
+        elif new_status == 'REQUIRES_CLARIFICATION' and task.status in ['OPEN', 'IN_PROGRESS']:
+            task.status = 'REQUIRES_CLARIFICATION'
+        else:
+            flash('Invalid status change', 'danger')
+            return redirect(url_for('task.agent_view_tasks'))
+
         db.session.commit()
+
+        # Filters and sorting logic for viewing tasks
         status_filter = request.args.get('status')
         sort_filter = request.args.get('sort')
         query = db.session.query(Task).join(agent_task).filter(agent_task.c.agent_id == agent.id)
@@ -291,6 +289,7 @@ def change_status(task_id):
             query = query.order_by(Task.created_at.desc())
         elif sort_filter == "oldest":
             query = query.order_by(Task.created_at.asc())
+
         assigned_tasks = query.all()
         tasks_with_related = []
         for task in assigned_tasks:

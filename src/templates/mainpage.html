@@ -56,7 +56,7 @@
             description: "{{ report.description }}",
             photo_file: "{{ report.photo_file if report.photo_file else '' }}",
                 creator_id:"{{ report.creator_id }}",
-                 is_approved:"{{ report.is_approved }}"
+                 status:"{{ report.status}}"
         };
         reports.push(reportdet);
     {% endfor %}

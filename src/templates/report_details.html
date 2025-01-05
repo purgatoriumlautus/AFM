@@ -50,37 +50,22 @@
             <br>
             <div class="row justify-content-center">
                 <div class="col-auto">
-                    {% if not report.is_approved %}
+                    {% if report.status == 'OPEN' %}
                         <form method="POST" class="me-3">
-                            <button type="submit" name="action" value="approve" class="btn btn-dark btn-lg">Approve</button>
+                            <button type="submit" name="action" value="resolve" class="btn btn-dark btn-lg">Resolve</button>
                         </form>
-                    {% else %}
+                    {% elif report.status == 'RESOLVED' or report.status == '' %}
                         <form method="POST">
-                            <button type="submit" name="action" value="delete" class="btn btn-dark btn-lg">Delete</button>
+                            <button type="submit" name="action" value="open" class="btn btn-dark btn-lg">Set status to Open</button>
                         </form>
                     {% endif %}
                 </div>
                 <div class="col-auto">
-                    {% if not report.is_approved %}
-                        <form method="POST">
-                            <button type="submit" name="action" value="delete" class="btn btn-dark btn-lg">Delete</button>
-                        </form>
-                    {% else %}
+                    {% if report.status == 'OPEN' %}
                         <form method="GET" action="{{ url_for('task.create_task', report_id=report.id) }}" enctype="multipart/form-data">
                             <button type="submit" name="action" class="btn btn-dark btn-lg">Create Task</button>
                         </form>
-                    {% endif %}
-                </div>
-            </div>
-        {% elif not current_user.uid == report.creator_id and not report.is_approved %}
-            <div style="text-align: center; width: 100%; margin-top: 10px">
-                <div style="width: 50%; display: inline-block;">
-                    <input onchange="updateScore(this)" type="range" class="form-range customRange" value="1" min="1" max="100">
-                    <div id="score" class="d-flex justify-content-between">
-                        <span>Low Urgency</span>
-                        <span>Medium Urgency</span>
-                        <span>High Urgency</span>
-                    </div>
+                         {% endif %}
                 </div>
             </div>
         {% endif %}

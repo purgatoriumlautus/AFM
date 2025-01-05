@@ -8,8 +8,9 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <title>View Reports</title>
     <style>
-       .navbar .nav-link.vr{
-              color: #4e8fcc; background-color: #d7e1f3
+        .navbar .nav-link.vr {
+            color: #4e8fcc;
+            background-color: #d7e1f3;
         }
         .report-card {
             border: 1px solid #e0e0e0;
@@ -25,7 +26,6 @@
         .report-card .report-info {
             display: flex;
             align-items: center;
-
         }
         .report-card img {
             width: 50px;
@@ -86,7 +86,6 @@
 <div class="container my-5">
     <!-- Filters Form -->
     <form method="GET" action="{{ url_for('report.view_reports') }}" class="row mb-4">
-
         <div class="col-md-2">
             <label for="urgency" class="form-label">Filter by Urgency</label>
             <select name="urgency" id="urgency" class="form-select">
@@ -100,8 +99,9 @@
             <label for="status" class="form-label">Filter by Status</label>
             <select name="status" id="status" class="form-select">
                 <option value="">All</option>
-                <option value="approved" {% if status == "approved" %}selected{% endif %}>Approved</option>
-                <option value="pending" {% if status == "pending" %}selected{% endif %}>Pending</option>
+                <option value="OPEN" {% if status == "OPEN" %}selected{% endif %}>Open</option>
+                <option value="RESOLVED" {% if status == "RESOLVED" %}selected{% endif %}>Resolved</option>
+                <option value="PENDING" {% if status == "" %}selected{% endif %}>Pending</option>
             </select>
         </div>
         <div class="col-md-2">
@@ -118,32 +118,64 @@
 
     {% for report in reports %}
     <div class="report-card">
-    <div class="report-info">
+        <div class="report-info">
             <img src="{{ url_for('static', filename=report.photo_file) if report.photo_file else 'https://via.placeholder.com/50' }}" alt="Report Image">
             <div>
-                 <p class="mb-0 text-truncate d-inline"><span class="text-muted">{{ report.location }}</span> <i style="color: green; font-size: large" class="bi bi-geo-alt-fill"></i></p>
-            <p class="mb-0 text-truncate">{{ report.description }}</p>
+                <p class="mb-0 text-truncate d-inline"><span class="text-muted">{{ report.location }}</span> <i style="color: green; font-size: large" class="bi bi-geo-alt-fill"></i></p>
+                <p class="mb-0 text-truncate">{{ report.description }}</p>
             </div>
         </div>
-    <div class="d-flex align-items-center">
-        <span class="urgency-badge
-            {% if report.get_urgency() == 'Low Urgency' %}urgency-low{% elif report.get_urgency() == 'Medium Urgency' %}urgency-medium{% else %}urgency-high{% endif %}">
-            {{ report.get_urgency() }}
-        </span>
+        <div class="d-flex align-items-center">
+            <span class="urgency-badge
+                {% if report.get_urgency() == 'Low Urgency' %}urgency-low{% elif report.get_urgency() == 'Medium Urgency' %}urgency-medium{% else %}urgency-high{% endif %}">
+                {{ report.get_urgency() }}
+            </span>
+        </div>
+        <div class="d-flex align-items-center">
+            <span>
+                {% if report.status == "OPEN" %}
+                    Open
+                {% elif report.status == "RESOLVED" %}
+                    Resolved
+                {% else %}
+                    Pending
+                {% endif %}
+            </span>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <a href="{{ url_for('report.manage_report', report_id=report.id) }}" class="btn btn-sm btn-light">View</a>
+
+            {% if report.status == "open" %}
+            <form method="POST" action="{{ url_for('report.manage_report', report_id=report.id) }}" style="display:inline;">
+                <input type="hidden" name="action" value="resolve">
+                <button type="submit" class="btn btn-sm btn-primary" title="Mark as Resolved">
+                    <i class="bi bi-check-circle"></i> Mark as Resolved
+                </button>
+            </form>
+            {% elif report.status == "resolved" %}
+            <form method="POST" action="{{ url_for('report.manage_report', report_id=report.id) }}" style="display:inline;">
+                <input type="hidden" name="action" value="reopen">
+                <button type="submit" class="btn btn-sm btn-warning" title="Reopen Report">
+                    <i class="bi bi-arrow-repeat"></i> Reopen
+                </button>
+            </form>
+            {% elif report.status == "pending" %}
+            <form method="POST" action="{{ url_for('report.manage_report', report_id=report.id) }}" style="display:inline;">
+                <input type="hidden" name="action" value="resolve">
+                <button type="submit" class="btn btn-sm btn-primary" title="Resolve Pending Report">
+                    <i class="bi bi-check-circle"></i> Mark as Resolved
+                </button>
+            </form>
+            {% endif %}
+
+            <form method="POST" action="{{ url_for('report.manage_report', report_id=report.id) }}" style="display:inline;">
+                <input type="hidden" name="action" value="delete">
+                <button type="submit" class="btn delete-btn" title="Delete Report">
+                    <i class="bi bi-trash3"></i>
+                </button>
+            </form>
+        </div>
     </div>
-    <div class="d-flex align-items-center">
-        <span>{{ "Approved" if report.is_approved else "Pending" }}</span>
-    </div>
-    <div class="d-flex align-items-center gap-2">
-        <a href="{{ url_for('report.manage_report', report_id=report.id) }}" class="btn btn-sm btn-light">View</a>
-        <form method="POST" action="{{ url_for('report.manage_report', report_id=report.id) }}" style="display:inline;">
-            <input type="hidden" name="action" value="delete">
-            <button type="submit" class="btn delete-btn" title="Delete Report">
-                <i class="bi bi-trash3"></i>
-            </button>
-        </form>
-    </div>
-</div>
     {% endfor %}
 </div>
 

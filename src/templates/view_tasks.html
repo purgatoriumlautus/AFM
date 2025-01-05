@@ -44,25 +44,37 @@
         .gap-2 {
             gap: 8px;
         }
-        .badge{
-            font-size: 0.875rem;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-weight: normal;
-        }
-        .nonstr {
-            background-color: #f8d7da;
-            color: #721c24;
-        }
-        .inpr{
-            background-color: #cde4ff;
-            color: #02468f;
-        }
-        .done {
-             background-color: #d4edda;
-            color: #155724;
+       .badge {
+    font-size: 0.875rem;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-weight: normal;
+}
 
-        }
+.open {
+    background-color: #fff3cd; /* Yellowish */
+    color: #856404;
+}
+
+.requires-clarification {
+    background-color: #ffe8e8; /* Light Red */
+    color: #b71c1c;
+}
+
+.in-progress {
+    background-color: #cce5ff; /* Light Blue */
+    color: #004085;
+}
+
+.resolved {
+    background-color: #d4edda; /* Light Green */
+    color: #155724;
+}
+
+.unknown {
+    background-color: #e2e3e5; /* Gray */
+    color: #6c757d;
+}
         .delete-btn {
             color: #dc3545;
             font-size: 1.25rem;
@@ -120,10 +132,11 @@
             <label for="status" class="form-label">Filter by Status</label>
             <select name="status" id="status" class="form-select">
                 <option value="">All</option>
-                <option value="Not Started" {% if status == "Not Started" %}selected{% endif %}>Not Started</option>
-                <option value="In Process" {% if status == "In Process" %}selected{% endif %}>In Process</option>
-                 <option value="Done" {% if status == "Done" %}selected{% endif %}>Done</option>
-            </select>
+                    <option value="OPEN" {% if status == "OPEN" %}selected{% endif %}>Open</option>
+    <option value="REQUIRES_CLASSIFICATION" {% if status == "REQUIRES_CLARIFICATION" %}selected{% endif %}>Clarification required</option>
+    <option value="IN_PROGRESS" {% if status == "IN_PROGRESS" %}selected{% endif %}>In progress</option>
+    <option value="RESOLVED" {% if status == "RESOLVED" %}selected{% endif %}>Resolved</option>
+</select>
         </div>
         <div class="col-md-2">
             <label for="sort" class="form-label">Sort by Date</label>
@@ -154,9 +167,19 @@
         </div>
 
         <div class="d-flex align-items-center">
-            <span class="badge
-                {% if task.task.status == 'Not Started' %}nonstr{% elif task.task.status == 'In Process' %}inpr{% else %}done{% endif %}">{{ task.task.status }}</span>
-        </div>
+    <span class="badge
+    {% if task.task.status == 'OPEN' %}open
+    {% elif task.task.status == 'REQUIRES_CLARIFICATION' %}requires-clarification
+    {% elif task.task.status == 'IN_PROGRESS' %}in-progress
+    {% elif task.task.status == 'RESOLVED' %}resolved
+    {% else %}unknown{% endif %}">
+    {% if task.task.status == 'OPEN' %}Open
+    {% elif task.task.status == 'REQUIRES_CLARIFICATION' %}Clarification required
+    {% elif task.task.status == 'IN_PROGRESS' %}In progress
+    {% elif task.task.status == 'RESOLVED' %}Resolved
+    {% else %}Unknown{% endif %}
+</span>
+</div>
     {% if task.reports %}
         <div >
                <a href="{{ url_for('report.manage_report', report_id=task.reports[0].id) }}" style=" text-decoration: none;">Link to associated report</a>
@@ -164,14 +187,7 @@
         </div>
         {% endif %}
         <div class="d-flex align-items-center gap-2">
-             {% if task.status != 'Done' %}
-            <form method="POST" action="{{ url_for('task.end_task', task_id=task.task.id) }}" style="display:inline;">
-                <input type="hidden" name="action" value="end">
-                <button type="submit" class="btn end-btn" title="End Task">
-                 <i class="bi bi-stop-circle"></i> Finish
-                </button>
-            </form>
-            {% endif %}
+
 
             <a href="#" class="edit-btn" id="edit{{task.task.id}}" data-bs-toggle="offcanvas" data-bs-target="#TaskOffcanvas{{ task.task.id }}">
                 <i class="bi bi-pencil-square"></i> Edit
@@ -202,14 +218,16 @@
           <textarea class="form-control" id="description" name="description" rows="3" maxlength="300" placeholder="Describe the task (max 300 characters)"> {{ task.task.description|trim}}</textarea>
         <div id="charCount" class="form-text">0/300 characters</div>
     </div>
-   <div class="mb-3">
+  <div class="mb-3">
     <label for="status" class="form-label">Task Status</label>
     <select id="status" name="status" class="form-select">
-        <option value="Not Started" {% if task.task.status == 'Not Started' %}selected{% endif %}>Not Started</option>
-        <option value="In Process" {% if task.task.status == 'In Process' %}selected{% endif %}>In Process</option>
-        <option value="Done" {% if task.task.status == 'Done' %}selected{% endif %}>Done</option>
+        <option value="OPEN" {% if task.task.status == 'OPEN' %}selected{% endif %}>Open</option>
+        <option value="REQUIRES_CLARIFICATION" {% if task.task.status == 'REQUIRES_CLARIFICATION' %}selected{% endif %}>Clarification required</option>
+        <option value="IN_PROGRESS" {% if task.task.status == 'IN_PROGRESS' %}selected{% endif %}>In progress</option>
+        <option value="RESOLVED" {% if task.task.status == 'RESOLVED' %}selected{% endif %}>Resolved</option>
     </select>
 </div>
+
    <div class="mb-3">
     <label class="form-label">Selected Agents</label>
     <div id="selectedAgents{{ task.task.id }}" class="d-flex flex-wrap">

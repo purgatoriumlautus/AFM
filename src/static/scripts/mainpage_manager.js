@@ -44,14 +44,16 @@ function showReports(currentUser) {
 
             // Determine the marker icon based on report properties
             var markerIcon = blueIcon;
-            console.log(report.is_approved);
+            console.log(report.status);
             if (report.creator_id === currentUser) {
                 console.log(report.creator_id);
                 markerIcon = greenIcon;
-            } else if (report.is_approved === "False") {
-                markerIcon = redIcon;
-            } else {
+            } else if (report.status === 'OPEN' || report.status ==='RESOLVED' ) {
                 markerIcon = blueIcon;
+
+            } else {
+                 markerIcon = redIcon;
+
             }
 
             // Create a marker and bind a popup with report details

@@ -96,8 +96,8 @@
             </div>
             <div class="col-md-3 sidebar">
                 {% if role == "Manager" %}
-                    <a href="{{ url_for('task.view_tasks') }}">See Tasks</a>
                     <a href="{{ url_for('report.view_reports') }}">See Reports</a>
+                    <a href="{{ url_for('task.view_tasks') }}">See Tasks</a>
                 {% elif role == "Agent" %}
                     <a href="{{ url_for('task.agent_view_tasks') }}">My Tasks</a>
                     <a href="{{ url_for('task.manage_requests') }}">Task Assignment Requests</a>

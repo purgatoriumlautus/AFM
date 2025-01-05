@@ -19,7 +19,7 @@ def initiate_db(app):
         # Clear existing data
         db.drop_all()
         db.create_all()
-        
+
         print("-------------------\n*INITIALIZING THE DATABASE, POPULATING WITH DUMMY DATA*")
         print("-------------------\n|||||||||||||")
 
@@ -31,12 +31,11 @@ def initiate_db(app):
             db.session.add(organisation)
             db.session.commit()
 
-
         # Add users
         users = [
             User(username='owner123', password=bcrypt.generate_password_hash('owner123').decode('utf-8'),
-                         email='owner@example.com', is_owner=True, organisation_id=organisation.id,
-                         email_confirmed=True),
+                 email='owner@example.com', is_owner=True, organisation_id=organisation.id,
+                 email_confirmed=True),
             User(username='agent1', password=bcrypt.generate_password_hash('agent123').decode('utf-8'),
                  email='agent1@example.com', created_at=datetime.now(timezone.utc) - timedelta(days=5),
                  email_confirmed=True),
@@ -48,7 +47,7 @@ def initiate_db(app):
                  email_confirmed=True),
             User(username='user2', password=bcrypt.generate_password_hash('1234').decode('utf-8'),
                  email='user2@example.com', created_at=datetime.now(timezone.utc) - timedelta(days=7),
-                 email_confirmed=False),  # user2 with email_confirmed set to False
+                 email_confirmed=False),
             User(username='user3', password=bcrypt.generate_password_hash('1234').decode('utf-8'),
                  email='user3@example.com', created_at=datetime.now(timezone.utc) - timedelta(days=2),
                  email_confirmed=True),
@@ -73,13 +72,12 @@ def initiate_db(app):
             User(username='user10', password=bcrypt.generate_password_hash('1234').decode('utf-8'),
                  email='user10@example.com', created_at=datetime.now(timezone.utc) - timedelta(days=20),
                  email_confirmed=True),
-
         ]
 
         db.session.bulk_save_objects(users)
         db.session.commit()
 
-        for c in range(1,4):
+        for c in range(1, 4):
             users[c].organisation_id = organisation.id
 
         # Assign roles
@@ -92,6 +90,7 @@ def initiate_db(app):
         db.session.add(manager)
         db.session.bulk_save_objects(agents)
         db.session.commit()
+
         # Add a superadmin user
         superadmin_user = User(
             username='admin',
@@ -101,79 +100,61 @@ def initiate_db(app):
         )
         db.session.add(superadmin_user)
         db.session.commit()
-        
+
         superadmin_manager = Manager(user_id=superadmin_user.uid, position='Superadmin Manager')
         db.session.add(superadmin_manager)
         db.session.commit()
 
-
         print(f"Superadmin created: {superadmin_user.username}, Email: {superadmin_user.email}")
 
-
-        # Add reports
+        # Add reports without approver_id and is_approved
         reports = [
-            Report(location='48.2082,16.3738', description='Scary', photo_file='photo1.jpg', creator_id=2, approver_id=1, is_approved=True),
-            Report(location='47.8095,13.0550', description='Crazy', photo_file='photo2.jpg', creator_id=3, approver_id=1, is_approved=False),
-            Report(location='47.2692,11.4041', description='Interesting', photo_file='photo3.jpg', creator_id=2, approver_id=None, is_approved=False),
+            Report(location='48.2082,16.3738', description='Scary', photo_file='photo1.jpg', creator_id=2),
+            Report(location='47.8095,13.0550', description='Crazy', photo_file='photo2.jpg', creator_id=3),
+            Report(location='47.2692,11.4041', description='Holy shit', photo_file='photo3.jpg', creator_id=4),
+            Report(location='47.2260,13.3341', description='OMG', photo_file='photo4.jpg', creator_id=4),
+            Report(location='47.2228,13.2950', description='WOW', photo_file='photo5.jpg', creator_id=6),
+            Report(location='47.3660,13.4560', description='I want to', photo_file='pic1.jpg', creator_id=7),
+            Report(location='47.2100,13.3750', description='No way', photo_file='photo7.jpg', creator_id=7),
+            Report(location='47.1600,13.4500', description='Impossible', photo_file='photo8.jpg', creator_id=4),
+            Report(location='47.2200,13.4000', description='I can\'t believe my eyes', photo_file='photo9.jpg',
+                   creator_id=2),
         ]
-
-
-        reports = [
-            Report(location='48.2082,16.3738', description='Scary', photo_file='photo1.jpg',creator_id=1,is_approved=True,approver_id=4),
-            Report(location='47.8095,13.0550', description='Crazy', photo_file='photo2.jpg',creator_id=2),
-            Report(location='47.2692,11.4041', description='Holy shit', photo_file='photo3.jpg',creator_id=3),
-            Report(location='47.2260,13.3341', description='OMG', photo_file='photo4.jpg',creator_id=4),
-            Report(location='47.2228,13.2950', description='WOW', photo_file='photo5.jpg',creator_id=4),
-            Report(location='47.3660,13.4560', description='I want to', photo_file='pic1.jpg',creator_id=6),
-            Report(location='47.2100,13.3750', description='No way', photo_file='photo7.jpg',creator_id=7),
-            Report(location='47.1600,13.4500', description='Impossible', photo_file='photo8.jpg',creator_id=4),
-            Report(location='47.2200,13.4000', description='I can\'t believe my eyes', photo_file='photo9.jpg',creator_id=2),
-        ]
-
 
         db.session.bulk_save_objects(reports)
         db.session.commit()
 
-
         print("-------------------\n*CREATED THE TABLES*")
-        
 
         inspector = inspect(db.engine)
         tables = inspector.get_table_names()
         for table in tables:
             print(table)
-        
 
         print('-------------------\n|||||||||||||')
         print("-------------------\n*SUCCESSFULLY POPULATED THE ORGANIZATION*")
         print(f"Organization: {organisation.name}, Token: {organisation.token}")
         print("-------------------\n|||||||||||||")
         print("-------------------\n*SUCCESSFULLY POPULATED THE DB WITH USERS*")
-        
+
         for user in User.query.all():
             print(f"Username: {user.username}, Email: {user.email}, Organization: ")
-        
+
         print("-------------------\n|||||||||||||")
         print("-------------------\n*SUCCESSFULLY POPULATED THE DB WITH ROLES*")
         print(f"Manager: {manager.user.username}, Position: {manager.position}")
-        
+
         for agent in Agent.query.all():
             print(f"Agent: {agent.user.username}, Position: {agent.position}")
-        
+
         print("-------------------\n|||||||||||||")
         print("-------------------\n*SUCCESSFULLY POPULATED THE DB WITH REPORTS*")
-        
+
         for report in Report.query.all():
             print(f"Location: {report.location}, Description: {report.description}, Photo: {report.photo_file}, "
-                  f"Creator: {report.creator.username}, Approver: {report.approver.user.username if report.approver else 'None'}, "
-                  f"Approved: {report.is_approved}")
-        
+                  f"Creator: {report.creator.username}, Approver: {report.approver.user.username if report.approver else 'None'}")
+
         print("-------------------\n|||||||||||||")
-
-
-
 if __name__ == '__main__':
     initiate_db(app)
-
-
 
