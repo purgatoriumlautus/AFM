@@ -62,7 +62,7 @@ function showReports(currentUser) {
             marker.bindPopup(`
                 <strong>Description:</strong> ${report.description}<br>
                 <strong>Location:</strong> ${lat}, ${lng}<br>
-                 <a href="/score_report/${report.id}">More info</a>
+                 <a href="/view_reports/${report.id}">More info</a>
             `);
 
             markers.addLayer(marker);

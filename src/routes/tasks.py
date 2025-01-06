@@ -277,7 +277,6 @@ def change_status(task_id):
 
         db.session.commit()
 
-        # Filters and sorting logic for viewing tasks
         status_filter = request.args.get('status')
         sort_filter = request.args.get('sort')
         query = db.session.query(Task).join(agent_task).filter(agent_task.c.agent_id == agent.id)
@@ -310,7 +309,6 @@ def change_status(task_id):
     flash("You are not authorized to view this page.", "danger")
     return redirect(url_for('main.mainpage'))
 
-
 @task.route('/tasks/related_tasks/<int:task_id>', methods=['POST', 'GET'])
 @login_required
 def related_tasks(task_id):
@@ -322,22 +320,33 @@ def related_tasks(task_id):
 
         related_tasks = Task.query.join(Task.reports).filter(
             Report.id.in_([report.id for report in task.reports]),
-            Task.id != task.id  # Ensure we're not selecting the same task
+            Task.id != task.id
         ).all()
 
-        related_agents = {}
-        for related_task in related_tasks:
-            related_agents[related_task.id] = [agent.user.username for agent in related_task.agents]
+        related_agents = {
+            related_task.id: [agent.user.username for agent in related_task.agents]
+            for related_task in related_tasks
+        }
+
+        if status_filter:
+            related_tasks = [task for task in related_tasks if task.status == status_filter]
 
         if sort_filter == "newest":
             related_tasks = sorted(related_tasks, key=lambda t: t.created_at, reverse=True)
         elif sort_filter == "oldest":
-            related_tasks = sorted(related_tasks, key=lambda t: t.created_at, reverse=False)
+            related_tasks = sorted(related_tasks, key=lambda t: t.created_at)
         elif sort_filter == "status":
             related_tasks = sorted(related_tasks, key=lambda t: t.status)
 
-        return render_template('related_tasks.html', related_tasks=related_tasks, related_agents = related_agents,
-                               status=status_filter, sort=sort_filter, task = task)
+        return render_template(
+            'related_tasks.html',
+            related_tasks=related_tasks,
+            related_agents=related_agents,
+            status=status_filter,
+            sort=sort_filter,
+            task=task
+        )
+
     flash("You are not authorized to view this page.", "danger")
     return redirect(url_for('main.mainpage'))
 
