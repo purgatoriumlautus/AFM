@@ -50,9 +50,11 @@ def join_organization(token):
     flash(f"You have successfully joined the organization '{organisation.name}'.", "success")
     return redirect(url_for('main.mainpage',is_super_admin=is_super_admin()))
 
+
 @main.route('/dashboard', methods=['GET'])
 @login_required
 def see_dashboard():
+    
     role = None
     task_data = []
 
@@ -77,7 +79,7 @@ def see_dashboard():
         } for task in agent.tasks]
 
     if role:
-        return render_template("dashboard.html", tasks=task_data, user=current_user, role=role)
+        return render_template("dashboard.html", tasks=task_data, user=current_user, role=role,is_super_admin=is_super_admin())
 
     flash("You are not authorized to view this page.", "danger")
     return redirect(url_for('main.mainpage'))

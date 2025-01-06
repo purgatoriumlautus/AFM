@@ -42,11 +42,19 @@
         </li>
         {% endif %}
 
-        {% if current_user.is_owner and current_user.organisation_id%}
-          <a class="nav-link ma" href="{{ url_for('admin.admin_dashboard') }}">Manage Roles</a>
+        {% if (current_user.is_owner and current_user.organisation_id) and not (current_user.is_owner and is_super_admin)%}
+          <a class="nav-link ma" href="{{ url_for('admin.admin_dashboard') }}">Your Organisation</a>
         {% endif %}
-         {% if current_user.is_owner and not current_user.organisation_id %}
+        {% if is_super_admin and current_user.organisation_id%}
+          <a class="nav-link ma" href="{{ url_for('admin.admin_dashboard') }}">Your Organisation</a>
+        {% endif %}
+
+        {% if current_user.is_owner and not current_user.organisation_id %}
              <a class="nav-link cr" href="{{ url_for('admin.create_organisation') }}">Create Organisation</a>
+        {% endif %}
+
+        {% if is_super_admin and not current_user.organisation_id%}
+          <a class="nav-link cr" href="{{ url_for('admin.create_organisation') }}">Create Organisation</a>
         {% endif %}
         <li class="nav-item active">
         {% if current_user.is_authenticated %}

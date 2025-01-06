@@ -9,6 +9,9 @@ import os
 
 auth = Blueprint('auth', __name__)
 
+
+
+
 def is_super_admin():
     sup_email = os.getenv('ADMIN_EMAIL')
     return sup_email == current_user.email
@@ -49,9 +52,6 @@ def logout():
     logout_user()
     flash('Signed out successfully.', 'info')
     return redirect(url_for('main.mainpage'))
-
-
-
 
 
 @auth.route("/register", methods=['GET', 'POST'])
@@ -181,6 +181,8 @@ def register_owner():
         flash('A verification email has been sent. Please check your inbox to activate your account.', 'info')
 
         return redirect(url_for('auth.login'))
+    
+
 @auth.route('/profile/<username>', methods=['GET'])
 @login_required
 def profile(username): # can be modified so that admins can see profiles of other users
@@ -198,9 +200,11 @@ def edit_profile(username):
         return redirect(url_for('main.mainpage'))
     if request.method == 'POST':
         current_user.username = request.form['username']
-        current_user.email = request.form['email']
+        current_user.password = request.form['email']
         db.session.commit()
         flash('Profile was updated successfully!', 'success')
         return redirect(url_for('auth.profile', username=current_user.username,is_super_admin=is_super_admin()))
+    
+
     return render_template('edit_profile.html', user=current_user,is_super_admin=is_super_admin())
 

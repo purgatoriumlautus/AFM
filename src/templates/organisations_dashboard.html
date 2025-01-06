@@ -26,13 +26,16 @@
     {% include "navbar.html" %}
     <div class="container table-container">
         <h1 class="mb-4">Organisations Dashboard</h1>
+        <div>
+            <a href="{{ url_for('superadmin.superadmin_dashboard') }}" class="btn btn-secondary">Users</a>
+            <a href="{{ url_for('superadmin.organisations_dashboard') }}" class="btn btn-primary">Organizations</a>
+        </div>
         <h2 class="mb-3">Organisations</h2>
         <table class="table table-striped table-hover">
             <thead class="table-dark">
                 <tr>
                     <th>Name</th>
                     <th>Owner</th>
-                    <th>Token</th>
                     <th>Action</th>
                 </tr>
             </thead>
@@ -40,12 +43,10 @@
                 {% for organisation in organisations %}
                 <tr>
                     <td>{{ organisation.name }}</td>
-                    <td>{{ organisation.owner.username if organisation.owner else 'None' }}</td>
-                    <td>{{ organisation.token }}</td>
+                    <td>{{ organisation.owner.username if organisation.owner else 'AFM' }}</td>
                     <td>
                         <!-- Add any actions you want to perform on organisations here -->
-                        <form method="POST" action="{{ url_for('superadmin.delete_organisation') }}" class="d-inline">
-                            <input type="hidden" name="organisation_id" value="{{ organisation.id }}">
+                        <form method="POST" action="{{ url_for('superadmin.delete_organisation', org_id=organisation.id) }}" class="d-inline">
                             <button type="submit" class="btn btn-sm btn-danger">Delete</button>
                         </form>
                     </td>
@@ -55,5 +56,29 @@
         </table>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.querySelectorAll('form[action*="delete_organisation"]').forEach((form) => {
+            form.addEventListener('submit', function (e) {
+                e.preventDefault();
+                const actionURL = form.getAttribute('action');
+        
+                fetch(actionURL, { method: 'POST' })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Remove the deleted row
+                            form.closest('tr').remove();
+                            alert(data.message);
+                        } else {
+                            alert("Error: " + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error("Error:", error);
+                        alert("An error occurred. Please try again.");
+                    });
+            });
+        });
+    </script>
 </body>
 </html>

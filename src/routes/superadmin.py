@@ -70,15 +70,6 @@ def superadmin_dashboard():
         search_query=search_query
     )
 
-@superadmin.route('/organisations', methods=['GET'])
-@login_required
-def organisations_dashboard():
-    if not is_super_admin():
-        flash("You are not authorized to view this page.", "danger")
-        return redirect(url_for('main.mainpage'))
-
-    organisations = Organisation.query.all()
-    return render_template('organisations_dashboard.html', organisations=organisations)
 
 
 
@@ -91,6 +82,7 @@ def update_user():
     user_id = request.form.get('user_id')
     organisation_id = request.form.get('organisation_id')
     role = request.form.get('role')
+    is_owner = request.form.get('is_owner') == 'true'
 
     user = User.query.get_or_404(user_id)
 
@@ -104,14 +96,15 @@ def update_user():
         if user.manager:
             db.session.delete(user.manager)
 
+        # Assign new role
         if role == 'agent':
             db.session.add(Agent(user_id=user.uid))
         elif role == 'manager':
             db.session.add(Manager(user_id=user.uid))
 
     db.session.commit()
-
     return jsonify({"success": True, "message": "User updated successfully"})
+
 
 
 @superadmin.route('/ban_user', methods=['POST'])
@@ -137,3 +130,56 @@ def ban_user():
 
     db.session.commit()
     return jsonify({"success": True, "message": message})
+
+
+
+@superadmin.route('/organisations', methods=['GET'])
+@login_required
+def organisations_dashboard():
+    if not is_super_admin():
+        flash("You are not authorized to view this page.", "danger")
+        return redirect(url_for('main.mainpage'))
+
+    organisations = Organisation.query.all()
+
+    # Prepare organization details
+    org_data = []
+    for org in organisations:
+        members_count = org.users.count()
+        owner = User.query.filter_by(organisation_id=org.id, is_owner=True).first()
+        org_data.append({
+            'id': org.id,
+            'name': org.name,
+            'members_count': members_count,
+            'owner': owner.username if owner else "No Owner"
+        })
+
+    return render_template('organisations_dashboard.html', organisations=org_data,is_super_admin=is_super_admin())
+
+
+
+@superadmin.route('/delete_organisation/<int:org_id>', methods=['POST'])
+@login_required
+def delete_organisation(org_id):
+    if not is_super_admin():
+        return jsonify({"success": False, "message": "Unauthorized"}), 403
+
+    organisation = Organisation.query.get_or_404(org_id)
+
+    # Handle members
+    members = User.query.filter_by(organisation_id=organisation.id).all()
+    for member in members:
+        member.organisation_id = None
+        member.is_owner = False
+
+        # Remove roles
+        if member.agent:
+            db.session.delete(member.agent)
+        if member.manager:
+            db.session.delete(member.manager)
+
+    # Delete the organisation
+    db.session.delete(organisation)
+    db.session.commit()
+
+    return jsonify({"success": True, "message": f"Organisation '{organisation.name}' deleted successfully"})

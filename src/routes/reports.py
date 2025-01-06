@@ -23,6 +23,7 @@ report = Blueprint("report",__name__)
 def create_report():
     if request.method == "GET":
         return(render_template('report.html',is_super_admin=is_super_admin()))
+    
     location = request.form.get('location')
     description = request.form.get('description')
     photo = request.files.get('photo')
@@ -140,6 +141,7 @@ def manage_report(report_id):
     return render_template('report_details.html', current_user=current_user, report=report, manager=manager,
                            is_super_admin=is_super_admin(), location=address, urgency=urgency,
                            creator_name=creator.username)
+
 
 @report.route("/score_report/<int:report_id>", methods=['GET', 'POST'])
 @login_required
