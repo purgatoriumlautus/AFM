@@ -72,7 +72,6 @@ def superadmin_dashboard():
 
 
 
-
 @superadmin.route('/update_user', methods=['POST'])
 @login_required
 def update_user():
@@ -86,24 +85,37 @@ def update_user():
 
     user = User.query.get_or_404(user_id)
 
+    # Update organisation
     if organisation_id is not None:
         organisation = Organisation.query.get(organisation_id) if organisation_id else None
         user.organisation_id = organisation.id if organisation else None
 
+    # Update roles
     if role is not None:
         if user.agent:
             db.session.delete(user.agent)
         if user.manager:
             db.session.delete(user.manager)
 
-        # Assign new role
         if role == 'agent':
             db.session.add(Agent(user_id=user.uid))
         elif role == 'manager':
             db.session.add(Manager(user_id=user.uid))
 
+    # Update ownership privilege
+    if is_owner:
+        # Ensure no other user in this organization is set as owner
+        if user.organisation_id:
+            User.query.filter_by(organisation_id=user.organisation_id, is_owner=True).update({'is_owner': False})
+        user.is_owner = True
+    else:
+        user.is_owner = False
+
     db.session.commit()
+
     return jsonify({"success": True, "message": "User updated successfully"})
+
+
 
 
 
@@ -146,7 +158,7 @@ def organisations_dashboard():
     org_data = []
     for org in organisations:
         members_count = org.users.count()
-        owner = User.query.filter_by(organisation_id=org.id, is_owner=True).first()
+        owner = User.query.filter_by(uid=org.owner_id).first()
         org_data.append({
             'id': org.id,
             'name': org.name,

@@ -26,58 +26,57 @@
     {% include "navbar.html" %}
     <div class="container table-container">
         <h1 class="mb-4">Superadmin Dashboard</h1>
-        <h2 class="mb-3">USERS</h2>
+        <div>
+            <a href="{{ url_for('superadmin.superadmin_dashboard') }}" class="btn btn-primary">Users</a>
+            <a href="{{ url_for('superadmin.organisations_dashboard') }}" class="btn btn-secondary">Organizations</a>
+        </div>
+        <h2 class="mb-3">Users</h2>
+        <div class="me-auto mb-3">
+            <select id="sortSelector" class="form-select form-select-sm" style="width: auto;">
+                <option value="?search={{ search_query }}&sort_by=username&sort_order=asc" 
+                        {% if sort_by == 'username' and sort_order == 'asc' %}selected{% endif %}>
+                    Sort by Username (A-Z)
+                </option>
+                <option value="?search={{ search_query }}&sort_by=username&sort_order=desc" 
+                        {% if sort_by == 'username' and sort_order == 'desc' %}selected{% endif %}>
+                    Sort by Username (Z-A)
+                </option>
+                <option value="?search={{ search_query }}&sort_by=organisation&sort_order=asc" 
+                        {% if sort_by == 'organisation' and sort_order == 'asc' %}selected{% endif %}>
+                    Sort by Organisation
+                </option>
+                
+                <option value="?search={{ search_query }}&sort_by=role&sort_order=asc" 
+                        {% if sort_by == 'role' and sort_order == 'asc' %}selected{% endif %}>
+                    Sort by Role
+                </option>
+            
+                <option value="?search={{ search_query }}&sort_by=status&sort_order=asc" 
+                        {% if sort_by == 'status' and sort_order == 'asc' %}selected{% endif %}>
+                    Sort by Status (Banned last)
+                </option>
+                <option value="?search={{ search_query }}&sort_by=status&sort_order=desc" 
+                        {% if sort_by == 'status' and sort_order == 'desc' %}selected{% endif %}>
+                    Sort by Status (Banned first)
+                </option>
+            </select>
+        </div>
         <table class="table table-striped table-hover">
             <thead class="table-dark">
                 <tr>
+                    <th>ID</th>
                     <th>Username</th>
                     <th>Email</th>
                     <th>Organisation</th>
+                    <th>Is Owner</th>
                     <th>Role</th>
                     <th>Status</th>
                     <th>Action</th>
                 </tr>
             </thead>
-      
-            <div class="me-auto mb-3">
-                <select id="sortSelector" class="form-select form-select-sm" style="width: auto;">
-                    <option value="?search={{ search_query }}&sort_by=username&sort_order=asc" 
-                            {% if sort_by == 'username' and sort_order == 'asc' %}selected{% endif %}>
-                        Sort by Username (A-Z)
-                    </option>
-                    <option value="?search={{ search_query }}&sort_by=username&sort_order=desc" 
-                            {% if sort_by == 'username' and sort_order == 'desc' %}selected{% endif %}>
-                        Sort by Username (Z-A)
-                    </option>
-                    <option value="?search={{ search_query }}&sort_by=organisation&sort_order=asc" 
-                            {% if sort_by == 'organisation' and sort_order == 'asc' %}selected{% endif %}>
-                        Sort by Organisation (A-Z)
-                    </option>
-                    <option value="?search={{ search_query }}&sort_by=organisation&sort_order=desc" 
-                            {% if sort_by == 'organisation' and sort_order == 'desc' %}selected{% endif %}>
-                        Sort by Organisation (Z-A)
-                    </option>
-                    <option value="?search={{ search_query }}&sort_by=role&sort_order=asc" 
-                            {% if sort_by == 'role' and sort_order == 'asc' %}selected{% endif %}>
-                        Sort by Role (A-Z)
-                    </option>
-                    <option value="?search={{ search_query }}&sort_by=role&sort_order=desc" 
-                            {% if sort_by == 'role' and sort_order == 'desc' %}selected{% endif %}>
-                        Sort by Role (Z-A)
-                    </option>
-                    <option value="?search={{ search_query }}&sort_by=status&sort_order=asc" 
-                            {% if sort_by == 'status' and sort_order == 'asc' %}selected{% endif %}>
-                        Sort by Status (A-Z)
-                    </option>
-                    <option value="?search={{ search_query }}&sort_by=status&sort_order=desc" 
-                            {% if sort_by == 'status' and sort_order == 'desc' %}selected{% endif %}>
-                        Sort by Status (Z-A)
-                    </option>
-                </select>
-            </div>
             <tbody>
                 {% for user in users %}
-                <tr>
+                <tr><td>{{user.uid}}</td>
                     <td>{{ user.username }}</td>
                     <td>{{ user.email }}</td>
                     <td>
@@ -94,13 +93,23 @@
                         </form>
                     </td>
                     <td>
+                        <form method="POST" action="{{ url_for('superadmin.update_user') }}" class="d-inline">
+                            <input type="hidden" name="user_id" value="{{ user.uid }}">
+                            <input type="hidden" name="is_owner" value="{{ 'false' if user.is_owner else 'true' }}">
+                            <button type="submit" 
+                                    class="btn btn-sm {{ 'btn-success' if user.is_owner else 'btn-secondary' }}">
+                                {{ 'Yes' if user.is_owner else 'No' }}
+                            </button>
+                        </form>
+                    </td>
+                    
+                    <td>
                         <form method="POST" action="{{ url_for('superadmin.update_user') }}" class="dropdown-wrapper auto-submit-form">
                             <input type="hidden" name="user_id" value="{{ user.uid }}">
                             <select name="role" class="form-select auto-submit">
                                 <option value="" {% if not user.agent and not user.manager %}selected{% endif %}>-</option>
                                 <option value="agent" {% if user.agent %}selected{% endif %}>Agent</option>
                                 <option value="manager" {% if user.manager %}selected{% endif %}>Manager</option>
-
                             </select>
                         </form>
                     </td>
@@ -111,18 +120,18 @@
                             <span class="badge bg-success">Active</span>
                         {% endif %}
                     </td>
+        
                     <td>
                         <form method="POST" action="{{ url_for('superadmin.ban_user') }}" class="d-inline">
                             <input type="hidden" name="user_id" value="{{ user.uid }}">
                             {% if user.is_banned %}
                                 <input type="hidden" name="action" value="unban">
-                                <button type="submit" class="btn btn-sm btn-warning">Unban</button>
+                                <button type="submit" class="btn btn-sm btn-warning ban-action">Unban</button>
                             {% else %}
                                 <input type="hidden" name="action" value="ban">
-                                <button type="submit" class="btn btn-sm btn-danger">Ban</button>
+                                <button type="submit" class="btn btn-sm btn-danger ban-action">Ban</button>
                             {% endif %}
                         </form>
-                        
                     </td>
                 </tr>
                 {% endfor %}
@@ -130,16 +139,70 @@
         </table>
     </div>
     <script>
+        // Attach event listener for the ban/unban action
         function attachBanUnbanListeners() {
-            document.querySelectorAll('form[action$="ban_user"]').forEach((form) => {
+            document.querySelectorAll('.ban-action').forEach((button) => {
+                button.addEventListener('click', function (e) {
+                    e.preventDefault(); // Prevent form submission
+
+                    const form = this.closest('form');
+                    const formData = new FormData(form);
+                    const actionURL = form.getAttribute('action');
+
+                    fetch(actionURL, {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            const row = form.closest('tr');
+                            const statusCell = row.querySelector('td:nth-child(7)');
+                            const actionCell = row.querySelector('td:nth-child(8)');
+                            const action = formData.get('action');
+
+                            // Update status column
+                            statusCell.innerHTML = action === 'ban' 
+                                ? '<span class="badge bg-danger">Banned</span>'
+                                : '<span class="badge bg-success">Active</span>';
+
+                            // Update action column
+                            actionCell.innerHTML = `
+                                <form method="POST" action="${actionURL}" class="d-inline">
+                                    <input type="hidden" name="user_id" value="${formData.get('user_id')}">
+                                    <input type="hidden" name="action" value="${action === 'ban' ? 'unban' : 'ban'}">
+                                    <button type="submit" class="btn btn-sm ${action === 'ban' ? 'btn-warning' : 'btn-danger'} ban-action" data-action="${action === 'ban' ? 'unban' : 'ban'}">
+                                        ${action === 'ban' ? 'Unban' : 'Ban'}
+                                    </button>
+                                </form>`;
+                            
+                            // Reattach listeners
+                            attachBanUnbanListeners();
+                        } else {
+                            alert("Error: " + data.message);
+                        }
+                    })
+                   
+                });
+            });
+        }
+
+        // Attach listeners initially
+        attachBanUnbanListeners();
+        
+ 
+
+        // Auto-submit form for organization and role changes
+        function attachOwnerToggleListeners() {
+            document.querySelectorAll('form[action*="update_user"]').forEach((form) => {
                 form.addEventListener('submit', function (e) {
-                    e.preventDefault(); // Prevent default form submission
+                    e.preventDefault(); // Prevent the default form submission
         
                     const formData = new FormData(form);
-                    const actionURL = form.getAttribute('action'); // Get the form's action attribute
+                    const actionURL = form.getAttribute('action');
         
                     fetch(actionURL, {
-                        method: form.method,
+                        method: 'POST',
                         body: formData
                     })
                     .then(response => {
@@ -151,45 +214,34 @@
                     })
                     .then(data => {
                         if (data.success) {
-                            // Update the UI dynamically without reloading the page
+                            const button = form.querySelector('button');
+                            const isOwner = formData.get('is_owner') === 'true';
+        
+                            // Update button text and styling
+                            button.className = isOwner ? 'btn btn-sm btn-success' : 'btn btn-sm btn-secondary';
+                            button.innerText = isOwner ? 'Yes' : 'No';
+        
+                            // Update hidden input value
+                            form.querySelector('input[name="is_owner"]').value = isOwner ? 'false' : 'true';
+        
+                            // Optionally highlight the row for feedback
                             const row = form.closest('tr');
-                            const statusCell = row.querySelector('td:nth-child(5)');
-                            const buttonCell = row.querySelector('td:nth-child(6)');
-                            const action = formData.get('action');
-        
-                            if (action === "ban") {
-                                row.classList.add('table-danger');
-                                statusCell.innerHTML = '<span class="badge bg-danger">Banned</span>';
-                                buttonCell.innerHTML = `
-                                    <form method="POST" action="/superadmin/ban_user" class="d-inline">
-                                      <input type="hidden" name="user_id" value="${formData.get('user_id')}">
-                                      <input type="hidden" name="action" value="unban">
-                                      <button type="submit" class="btn btn-sm btn-warning">Unban</button>
-                                    </form>`;
-                            } else {
-                                row.classList.remove('table-danger');
-                                statusCell.innerHTML = '<span class="badge bg-success">Active</span>';
-                                buttonCell.innerHTML = `
-                                    <form method="POST" action="/superadmin/ban_user" class="d-inline">
-                                        <input type="hidden" name="user_id" value="${formData.get('user_id')}">
-                                        <input type="hidden" name="action" value="ban">
-                                        <button type="submit" class="btn btn-sm btn-danger">Ban</button>`;
-                            }
-        
-                            // Reattach event listeners to the newly added forms
-                            attachBanUnbanListeners();
+                            row.classList.add('table-success');
+                            setTimeout(() => row.classList.remove('table-success'), 2000);
                         } else {
                             alert("Error: " + data.message);
                         }
                     })
-                   
+                    .catch(error => {
+                        console.error("Error:", error);
+                        alert("An error occurred. Please try again.");
+                    });
                 });
             });
         }
         
         // Attach listeners initially
-        attachBanUnbanListeners();
-
+        attachOwnerToggleListeners();
         document.querySelectorAll('.auto-submit').forEach((dropdown) => {
             dropdown.addEventListener('change', function () {
                 const form = this.form;
@@ -213,17 +265,16 @@
                 })
                 .catch(error => {
                     console.error("Error:", error);
-                    alert("An error occurred. Please try again.",error);
+                    alert("An error occurred. Please try again.");
                 });
             });
         });
         document.getElementById('sortSelector').addEventListener('change', function () {
-            const sortURL = this.value; // Get the URL from the selected option
-            window.location.href = sortURL; // Navigate to the selected sort URL
+            const selectedURL = this.value; // Get the selected URL
+            window.location.href = selectedURL; // Redirect to the selected URL
         });
-            
+        
     </script>
-
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

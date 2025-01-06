@@ -183,7 +183,6 @@ class Score(db.Model):
         self.user_id = user_id
         self.score = score
 
-
 class Organisation(db.Model):
     __tablename__ = 'organisations'
 
