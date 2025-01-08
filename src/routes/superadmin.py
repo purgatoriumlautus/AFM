@@ -72,11 +72,59 @@ def superadmin_dashboard():
 
 
 
+# @superadmin.route('/update_user', methods=['POST'])
+# @login_required
+# def update_user():
+#     if not is_super_admin():
+#         return jsonify({"success": False, "message": "Unauthorized"}), 403
+
+#     user_id = request.form.get('user_id')
+#     organisation_id = request.form.get('organisation_id')
+#     role = request.form.get('role')
+#     is_owner = request.form.get('is_owner') == 'true'
+
+#     user = User.query.get_or_404(user_id)
+
+#     # Update organisation
+#     if organisation_id is not None:
+#         organisation = Organisation.query.get(organisation_id) if organisation_id else None
+#         user.organisation_id = organisation.id if organisation else None
+    
+
+#     # Prevent updating organisation if user is owner
+#     if user.is_owner and organisation_id is not None:
+#         return jsonify({"success": False, "message": "Cannot assign organisation to an owner"}), 400
+
+#     # Update roles
+#     if role is not None:
+#         if user.agent:
+#             db.session.delete(user.agent)
+#         if user.manager:
+#             db.session.delete(user.manager)
+
+#         if role == 'agent':
+#             db.session.add(Agent(user_id=user.uid))
+#         elif role == 'manager':
+#             db.session.add(Manager(user_id=user.uid))
+
+#     # Update ownership privilege
+#     if is_owner:
+#         # Ensure no other user in this organization is set as owner
+#         if user.organisation_id:
+#             User.query.filter_by(organisation_id=user.organisation_id, is_owner=True).update({'is_owner': False})
+#         user.is_owner = True
+#     else:
+#         user.is_owner = False
+
+#     db.session.commit()
+
+#     return jsonify({"success": True, "message": "User updated successfully"})
 @superadmin.route('/update_user', methods=['POST'])
 @login_required
 def update_user():
     if not is_super_admin():
-        return jsonify({"success": False, "message": "Unauthorized"}), 403
+        flash("You are not authorized to perform this action.", "danger")
+        return redirect(url_for('superadmin.superadmin_dashboard'))
 
     user_id = request.form.get('user_id')
     organisation_id = request.form.get('organisation_id')
@@ -85,8 +133,17 @@ def update_user():
 
     user = User.query.get_or_404(user_id)
 
-    # Update organisation
-    if organisation_id is not None:
+    # Ensure only one owner per organisation
+    if is_owner:
+        if user.organisation_id:
+            # Remove ownership from other users in the same organisation
+            User.query.filter_by(organisation_id=user.organisation_id, is_owner=True).update({'is_owner': False})
+        user.is_owner = True
+    else:
+        user.is_owner = False
+
+    # Update organisation only if user is not an owner
+    if organisation_id is not None and not user.is_owner:
         organisation = Organisation.query.get(organisation_id) if organisation_id else None
         user.organisation_id = organisation.id if organisation else None
 
@@ -102,19 +159,9 @@ def update_user():
         elif role == 'manager':
             db.session.add(Manager(user_id=user.uid))
 
-    # Update ownership privilege
-    if is_owner:
-        # Ensure no other user in this organization is set as owner
-        if user.organisation_id:
-            User.query.filter_by(organisation_id=user.organisation_id, is_owner=True).update({'is_owner': False})
-        user.is_owner = True
-    else:
-        user.is_owner = False
-
     db.session.commit()
-
+    flash("User updated successfully.", "success")
     return jsonify({"success": True, "message": "User updated successfully"})
-
 
 
 
