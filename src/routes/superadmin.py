@@ -181,6 +181,7 @@ def organisations_dashboard():
         flash("You are not authorized to view this page.", "danger")
         return redirect(url_for('main.mainpage'))
 
+    users = User.query.all()
     organisations = Organisation.query.all()
 
     # Prepare organization details
@@ -195,7 +196,10 @@ def organisations_dashboard():
             'owner': owner.username if owner else "No Owner"
         })
 
-    return render_template('organisations_dashboard.html', organisations=org_data,is_super_admin=is_super_admin())
+    return render_template('organisations_dashboard.html', organisations=organisations,
+        users=users,
+        super_admin_id = get_super_admin_id(),
+        is_super_admin=is_super_admin())
 
 
 
@@ -224,3 +228,34 @@ def delete_organisation(org_id):
     db.session.commit()
 
     return jsonify({"success": True, "message": f"Organisation '{organisation.name}' deleted successfully"})
+
+
+@superadmin.route('/update_owner/<int:org_id>', methods=['POST'])
+@login_required
+def update_owner(org_id):
+    if not is_super_admin():
+        return jsonify({"success": False, "message": "Unauthorized"}), 403
+
+    new_owner_id = request.form.get('owner_id')
+    organisation = Organisation.query.get_or_404(org_id)
+
+    if new_owner_id:
+        # Remove current owner's privileges
+        if organisation.owner_id:
+            current_owner = User.query.get(organisation.owner_id)
+            if current_owner:
+                current_owner.is_owner = False
+                current_owner.organisation_id = None
+
+        # Set new owner
+        new_owner = User.query.get_or_404(new_owner_id)
+        new_owner.is_owner = True
+        new_owner.organisation_id = organisation.id
+        organisation.owner_id = new_owner_id
+    else:
+        # Remove the owner entirely if no owner is selected
+        organisation.owner_id = None
+
+    db.session.commit()
+    return jsonify({"success": True, "message": "Owner updated successfully"})
+

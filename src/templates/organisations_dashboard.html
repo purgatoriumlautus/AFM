@@ -35,6 +35,7 @@
         <table class="table table-striped table-hover">
             <thead class="table-dark">
                 <tr>
+                    <th>ID</th>
                     <th>Name</th>
                     <th>Owner</th>
                     <th>Action</th>
@@ -44,10 +45,26 @@
             <tbody>
                 {% for organisation in organisations %}
                 <tr>
+                    <td>{{organisation.id}}</td>
                     <td>{{ organisation.name }}</td>
-                    <td>{{ organisation.owner}}</td>
                     <td>
-                        <!-- Add any actions you want to perform on organisations here -->
+                        <form method="POST" action="{{ url_for('superadmin.update_owner', org_id=organisation.id) }}">
+                            <select name="owner_id" class="form-select">
+                                
+                                {% for user in users %}
+                                {% if (user.organisation_id == organisation.id) or (user.is_owner and not user.organistaion_id) or (user.id == super_admin_id) %}
+                                <option value="{{ user.uid }}" {% if user.uid == organisation.owner_id and user.is_owner %}selected{% endif %}>
+                                    {{ user.username }}
+                                </option>
+                                {% endif %}
+                                {% endfor %}
+                            </select>
+                        </form>
+                    </td>
+                    
+                    
+                    
+                    <td>
                         <form method="POST" action="{{ url_for('superadmin.delete_organisation', org_id=organisation.id) }}" class="d-inline">
                             <button type="submit" class="btn btn-sm btn-danger">Delete</button>
                         </form>
@@ -55,6 +72,7 @@
                 </tr>
                 {% endfor %}
             </tbody>
+            
         </table>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
@@ -80,7 +98,39 @@
                         alert("An error occurred. Please try again.");
                     });
             });
+            
         });
+
+       
+        document.querySelectorAll('select[name="owner_id"]').forEach(select => {
+            select.addEventListener('change', function (event) {
+                event.preventDefault(); // Prevent the default browser action
+                event.stopPropagation(); // Stop the event from bubbling further
+    
+                const form = this.closest('form');
+                const formData = new FormData(form);
+    
+                fetch(form.action, {
+                    method: 'POST',
+                    body: formData,
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert(data.message); // Show success message
+                        } else {
+                            alert("Error: " + data.message); // Show error message
+                        }
+                    })
+                    .catch(error => {
+                        console.error("Error:", error);
+                        alert("An error occurred. Please try again.");
+                    });
+            });
+        });
+        console.log("Form submitted via AJAX");
+
+        
     </script>
 </body>
 </html>
