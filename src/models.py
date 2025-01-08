@@ -3,8 +3,31 @@ from src.db import db
 from datetime import datetime
 import os
 from sqlalchemy import Index
+from sqlalchemy.orm import Session
+from sqlalchemy.event import listens_for
+
+
 
 sup_email = os.getenv("ADMIN_EMAIL")
+
+def get_super_admin_id():
+    from flask import current_app
+    from src.models import User  # Adjust import path as needed
+    super_admin_email = current_app.config.get("SUPER_ADMIN_EMAIL", os.getenv("ADMIN_EMAIL"))
+    super_admin = User.query.filter_by(email=super_admin_email).first()
+    if super_admin:
+        return super_admin.uid
+    raise ValueError("Super admin user not found. Please check the configuration.")
+
+@listens_for(Session, "before_flush")
+def ensure_owner_on_delete(session, flush_context, instances):
+    """
+    Ensures owner_id is reassigned to the super admin ID if it is set to NULL.
+    """
+    for instance in session.dirty:
+        if isinstance(instance, Organisation) and instance.owner_id is None:
+            super_admin_id = get_super_admin_id()
+            instance.owner_id = super_admin_id
 
 
 class User(db.Model, UserMixin):
@@ -189,7 +212,12 @@ class Organisation(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     token = db.Column(db.String(100), unique=True, nullable=True)  # Link token for invites
-    owner_id = db.Column(db.Integer, nullable=True)  # Soft reference to owner ID (not an FK)
+    owner_id = db.Column(
+        db.Integer, 
+        db.ForeignKey('users.uid', name='fk_organisation_owner_id', ondelete='SET NULL'), 
+        nullable=True
+    )  # Reference to User.uid for the owner
+
 
     # Relationships
     users = db.relationship(
