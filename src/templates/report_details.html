@@ -67,9 +67,41 @@
                         </form>
                          {% endif %}
                 </div>
+            <div class="col-auto">
+                     <form method="GET" action="{{ url_for('report.start_chat', report_id=report.id) }}">
+                <button type="submit" class="btn btn-dark btn-lg">
+                    {% if not report.chat %}
+                        Start Chat
+                    {% else %}
+                        View Chat
+                    {% endif %}
+                </button>
+            </form>
+                </div>
             </div>
+
         {% endif %}
-    </div>
+      {% if current_user.agent and report.chat%}
+            <br>
+            <div class="row justify-content-center">
+            <div class="col-auto">
+                     <form method="GET" action="{{ url_for('main.view_chat', chat_id = report.chat.id) }}">
+                <button type="submit" class="btn btn-dark btn-lg">View Chat
+                </button>
+            </form>
+                </div>
+            </div>
+          {% elif current_user.uid == report.creator.uid and report.chat %}
+           <br>
+ <div class="row justify-content-center">
+            <div class="col-auto">
+                     <form method="GET" action="{{ url_for('main.chat', chat_id = report.chat.id) }}">
+                <button type="submit" class="btn btn-dark btn-lg">View Chat
+                </button>
+            </form>
+                </div>
+            </div>
+      {% endif %}
 
     <script>
         function updateScore(elem) {

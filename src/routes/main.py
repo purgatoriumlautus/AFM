@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_user, logout_user,current_user, login_required
-from src.models import User,Report,Organisation, Manager, Agent
+from src.models import User,Report,Organisation, Manager, Agent, Chat, Message
 from src.extensions import bcrypt
 from src.db import db
 import os
@@ -83,3 +83,56 @@ def see_dashboard():
 
     flash("You are not authorized to view this page.", "danger")
     return redirect(url_for('main.mainpage'))
+
+
+@main.route('/chat/<int:chat_id>', methods=['GET', 'POST'])
+@login_required
+def chat(chat_id):
+    chat = Chat.query.get_or_404(chat_id)
+    report_id = chat.report_id
+    report = Report.query.get_or_404(report_id)
+
+    if request.method == 'POST':
+        content = request.form.get('message')
+        if content:
+            new_message = Message(chat_id=chat.id, sender_id=current_user.uid, content=content)
+            db.session.add(new_message)
+            db.session.commit()
+            return redirect(url_for('main.chat', chat_id=chat.id))
+
+    messages = chat.messages
+    manager = Manager.query.filter_by(user_id=current_user.uid).first()
+    user = manager.user.uid if manager else current_user.uid
+
+    return render_template(
+        'chat.html',
+        chat=chat,
+        messages=messages,
+        creator=report.creator,
+        user=user,
+        current_user=current_user
+    )
+
+@main.route('/view_chat/<int:chat_id>', methods=['GET', 'POST'])
+@login_required
+def view_chat(chat_id):
+    chat = Chat.query.get_or_404(chat_id)
+    report_id = chat.report_id
+    report = Report.query.get_or_404(report_id)
+
+    messages = chat.messages
+    manager = Manager.query.filter_by(user_id=current_user.uid).first()
+    sender1 =0
+    sender2 = 0
+    for message in messages:
+        if message.sender_id == report.creator.uid:
+            sender1 = message.sender_id
+        else:
+            sender2 = message.sender_id
+    user = 0
+    if manager:
+        user = manager.user.uid
+    else:
+        user = current_user.uid
+    return render_template('view_chat.html', chat=chat, messages=messages, creator = report.creator, user = user, current_user = current_user, sender1 = sender1, sender2 = sender2)
+

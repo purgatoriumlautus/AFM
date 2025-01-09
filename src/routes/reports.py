@@ -1,12 +1,14 @@
 from flask import Blueprint, render_template, request, redirect, url_for,current_app,flash, jsonify
 from flask_login import login_user, logout_user,current_user,login_required
 from werkzeug.security import check_password_hash
-from src.models import User,Report, Manager, Organisation,TaskRequest
+from src.models import User,Report, Manager, Organisation,TaskRequest, Chat, Message
 from src.db import db
 from src.extensions import bcrypt
 from werkzeug.utils import secure_filename
 import os
+from src.extensions import bcrypt,mail
 from geopy.geocoders import Nominatim
+from flask_mail import Mail, Message
 from math import radians, cos, sin, sqrt, atan2
 
 def is_super_admin():
@@ -136,7 +138,9 @@ def manage_report(report_id):
                 report.status = 'OPEN'
                 db.session.commit()
                 flash('Report status changed to OPEN.', 'success')
-            elif action == 'delete':
+        elif current_user.uid == report.creator_id:
+            action = request.form.get('action')
+            if action == 'delete':
                 for task in report.tasks:
                     db.session.delete(task)
                 db.session.delete(report)
@@ -204,30 +208,24 @@ def report_tasks(report_id):
     manager = Manager.query.filter_by(user_id=current_user.uid).first()
     report = Report.query.get_or_404(report_id)
 
-    # Check if the user is a manager or a super admin
     if manager or super_admin:
-        # Get the selected organization and sort order from the request
         organisation_id = request.args.get('organisation')
-        sort_order = request.args.get('sort', 'newest')  # Default to 'newest'
-
-        # Get all tasks for the report
+        sort_order = request.args.get('sort', 'newest')
         tasks = report.tasks
 
-        # Filter tasks by organization if provided
         tasks_with_organisation = []
         for task in tasks:
-            creator = task.creator  # The manager who created the task
-            organisation = creator.user.organisation if creator else None  # Get the creator's organisation
+            creator = task.creator
+            organisation = creator.user.organisation if creator else None
 
-            # Filter by organization if an organisation is selected
             if organisation_id and organisation and organisation.id != int(organisation_id):
-                continue  # Skip this task if it doesn't belong to the selected organization
+                continue
 
-            task_agents = task.agents  # Assigned agents
+            task_agents = task.agents
 
-            # Get requested agents for the task
+
             task_requests = TaskRequest.query.filter_by(task_id=task.id).all()
-            task_request_agents = [request.agent for request in task_requests]  # List of agents who requested the task
+            task_request_agents = [request.agent for request in task_requests]
 
             tasks_with_organisation.append({
                 'task': task,
@@ -236,13 +234,11 @@ def report_tasks(report_id):
                 'task_request_agents': task_request_agents
             })
 
-        # Sort tasks based on the selected sort order
         if sort_order == 'newest':
             tasks_with_organisation.sort(key=lambda x: x['task'].created_at, reverse=True)
         elif sort_order == 'oldest':
             tasks_with_organisation.sort(key=lambda x: x['task'].created_at)
 
-        # Get all organizations for the filter dropdown
         organisations = Organisation.query.all()
 
         return render_template(
@@ -257,3 +253,84 @@ def report_tasks(report_id):
     else:
         flash('Access denied. Only managers can manage reports.', 'error')
         return redirect(url_for('main.mainpage'))
+
+@report.route('/start_chat/<int:report_id>', methods=['GET'])
+@login_required
+def start_chat(report_id):
+    manager = Manager.query.filter_by(user_id=current_user.uid).first()
+    if not manager:
+        flash("You do not have permission to start a chat.", "danger")
+        return redirect(url_for('report.view_reports', report_id=report_id))
+
+    report = Report.query.get_or_404(report_id)
+    chat = Chat.query.filter_by(report_id=report_id).first()
+    if not chat:
+        chat = Chat(report_id=report.id, creator_id = manager.id)
+        db.session.add(chat)
+        db.session.commit()
+        user_email = report.creator.email
+        chat_url = url_for('main.chat', chat_id=chat.id, _external=True)
+        msg = Message(
+            sender=('AFM Team', 'afm.team.contact@gmail.com'),
+            subject='Manager Request: Additional Information Needed',
+            recipients=[user_email],
+            body=f"""
+        Hello {report.creator.username},
+
+        The manager handling your report has requested additional information. 
+        Please follow the link below to view the message and provide your response:
+
+        {chat_url}
+
+        Thank you,
+        The AFM Team
+                """,
+            html=f"""
+        <html>
+            <body>
+                <h2>Manager Request: Additional Information Needed</h2>
+                <p>Dear {report.creator.username},</p>
+                <p>The manager handling your report has requested additional information. Please click the link below to access the chat and provide your response:</p>
+                <p><a href="{chat_url}" style="color:blue; font-weight:bold;">Go to Chat</a></p>
+                <p>Thank you,</p>
+                <p>The AFM Team</p>
+            </body>
+        </html>
+                """
+        )
+        mail.send(msg)
+
+    return redirect(url_for('main.chat', chat_id=chat.id))
+
+
+@report.route('/my_reports', methods=['GET'])
+@login_required
+def my_reports():
+    query = Report.query.filter_by(creator_id=current_user.uid)
+    urgency = request.args.get('urgency', default="all")
+    status = request.args.get('status', default="all")
+    sort = request.args.get('sort', default="newest")
+
+    if status != "all":
+        query = query.filter(Report.status == status)
+    if urgency != "all":
+        if urgency == "low":
+            query = query.filter(Report.average_score <= 30)
+        elif urgency == "medium":
+            query = query.filter(Report.average_score > 30, Report.average_score <= 60)
+        elif urgency == "high":
+            query = query.filter(Report.average_score > 60)
+    if sort == "newest":
+        query = query.order_by(Report.created_at.desc())
+    elif sort == "oldest":
+        query = query.order_by(Report.created_at.asc())
+    reports = query.all()
+    return render_template(
+        'my_reports.html',
+        reports=reports,
+        urgency=urgency,
+        status=status,
+        sort=sort
+    )
+
+

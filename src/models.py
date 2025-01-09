@@ -146,6 +146,8 @@ class Report(db.Model):
     creator = db.relationship('User', back_populates='report')
     approver = db.relationship('Manager', backref='approved_reports')
     tasks = db.relationship('Task', secondary='task_report', back_populates='reports')
+    chat = db.relationship('Chat', back_populates='report', uselist=False, cascade="all, delete-orphan")
+
     def __init__(self, location, description, photo_file=None, creator_id=None, approver_id=None, is_approved=False,
                  avarage_score=None, score_count=None, status = ""):
         self.location = location
@@ -270,3 +272,25 @@ class TaskRequest(db.Model):
     def __init__(self, task_id, agent_id):
         self.task_id = task_id
         self.agent_id = agent_id
+
+class Chat(db.Model):
+    __tablename__ = 'chats'
+    id = db.Column(db.Integer, primary_key=True)
+    report_id = db.Column(db.Integer, db.ForeignKey('reports.id', ondelete="CASCADE"), nullable=False, unique=True)
+    creator_id = db.Column(db.Integer, db.ForeignKey('managers.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    creator = db.relationship('Manager', backref=db.backref('chats', lazy='dynamic'))
+    report = db.relationship('Report', back_populates='chat')
+    messages = db.relationship('Message', back_populates='chat', cascade='all, delete', passive_deletes=True)
+
+class Message(db.Model):
+    __tablename__ = 'messages'
+    id = db.Column(db.Integer, primary_key=True)
+    chat_id = db.Column(db.Integer, db.ForeignKey('chats.id', ondelete='CASCADE'), nullable=False)
+    sender_id = db.Column(db.Integer, db.ForeignKey('users.uid'), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    chat = db.relationship('Chat', back_populates='messages')
+    sender = db.relationship('User')

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+</head>
+<body style="background-color: #012041">
+   {% include "navbar.html" %}
+    <div class="container mt-4">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="alert alert-{{ messages[0][0] }} mt-3">
+                    {{ messages[0][1] }}
+                </div>
+            {% endif %}
+        {% endwith %}
+    </div>
+    <div class="container-fluid">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                {% if user == creator.uid %}
+                    <h5>Chat with {{ chat.creator.user.username }}</h5>
+                {% else %}
+                    <h5>Chat with {{ creator.username }}</h5>
+                {% endif %}
+            </div>
+            <div class="card-body" id="chat-body" style="height:430px; overflow-y: scroll;">
+                {% for message in messages %}
+                     <br>
+                    <div class="d-flex flex-column gap-2">
+                        {% if message.sender_id == user %}
+                            <div class="d-flex align-items-end flex-row-reverse">
+                                <div class="rounded bg-primary text-white p-2">
+                                    <p class="mb-0"><strong>{{ message.sender.username }}</strong><br>{{ message.content }}</p>
+                                    <small class="text-muted">{{ message.created_at.strftime('%H:%M %Y-%m-%d') }}</small>
+                                </div>
+                            </div>
+                        {% else %}
+                             <br>
+                            <div class="d-flex align-items-start">
+                                <div class="rounded bg-light p-2">
+                                    <p class="mb-0"><strong>{{ message.sender.username }}</strong><br>{{ message.content }}</p>
+                                    <small class="text-muted">{{ message.created_at.strftime('%H:%M %Y-%m-%d') }}</small>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+            <div class="card-footer">
+                <form method="POST" class="d-flex" action="{{ url_for('main.chat', chat_id=chat.id) }}">
+                    <input type="text" name="message" class="form-control me-2" placeholder="Type a message...">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-send"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Scroll to the bottom of the chat when the page is loaded
+        window.onload = function() {
+            var chatBody = document.getElementById('chat-body');
+            chatBody.scrollTop = chatBody.scrollHeight;
+        }
+    </script>
+</body>
+</html>
