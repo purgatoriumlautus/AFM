@@ -66,7 +66,7 @@ class User(db.Model, UserMixin):
     )
 
     def __init__(self, username=None, password=None, email=None, is_owner=False, organisation_id=None,
-                 email_confirmed=False, created_at=None, is_superadmin=False):
+                 email_confirmed=False, created_at=None, is_superadmin=False,home_address = None):
         self.username = username
         self.password = password
         self.email = email
@@ -75,6 +75,7 @@ class User(db.Model, UserMixin):
         self.email_confirmed = email_confirmed
         self.created_at = created_at
         self.is_superadmin = is_superadmin
+        self.home_address = home_address
 
     def __repr__(self):
         return f'<User {self.username}>'

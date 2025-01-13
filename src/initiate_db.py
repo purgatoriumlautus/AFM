@@ -28,50 +28,55 @@ def initiate_db(app):
         if not organisation:
             # Add an organization
             organisation = Organisation(name="Example Organization", token="org_token_123")
+            afm = Organisation(name="AFM", token="afm_token_123")
             db.session.add(organisation)
+            db.session.add(afm)
             db.session.commit()
 
         # Add users
         users = [
-            User(username='owner123', password=bcrypt.generate_password_hash('owner123').decode('utf-8'),
-                 email='owner@example.com', is_owner=True, organisation_id=organisation.id,
-                 email_confirmed=True),
-            User(username='agent1', password=bcrypt.generate_password_hash('agent123').decode('utf-8'),
-                 email='agent1@example.com', created_at=datetime.now(timezone.utc) - timedelta(days=5),
-                 email_confirmed=True),
-            User(username='agent2', password=bcrypt.generate_password_hash('agent123').decode('utf-8'),
-                 email='agent2@example.com', created_at=datetime.now(timezone.utc) - timedelta(days=10),
-                 email_confirmed=True),
-            User(username='manager1', password=bcrypt.generate_password_hash('manager123').decode('utf-8'),
-                 email='user1@example.com', created_at=datetime.now(timezone.utc) - timedelta(days=3),
-                 email_confirmed=True),
-            User(username='user2', password=bcrypt.generate_password_hash('1234').decode('utf-8'),
-                 email='user2@example.com', created_at=datetime.now(timezone.utc) - timedelta(days=7),
-                 email_confirmed=False),
-            User(username='user3', password=bcrypt.generate_password_hash('1234').decode('utf-8'),
-                 email='user3@example.com', created_at=datetime.now(timezone.utc) - timedelta(days=2),
-                 email_confirmed=True),
-            User(username='user4', password=bcrypt.generate_password_hash('1234').decode('utf-8'),
-                 email='user4@example.com', created_at=datetime.now(timezone.utc) - timedelta(days=4),
-                 email_confirmed=True),
-            User(username='user5', password=bcrypt.generate_password_hash('1234').decode('utf-8'),
-                 email='user5@example.com', created_at=datetime.now(timezone.utc) - timedelta(days=6),
-                 email_confirmed=True),
-            User(username='user6', password=bcrypt.generate_password_hash('1234').decode('utf-8'),
-                 email='user6@example.com', created_at=datetime.now(timezone.utc) - timedelta(days=8),
-                 email_confirmed=True),
-            User(username='user7', password=bcrypt.generate_password_hash('1234').decode('utf-8'),
-                 email='user7@example.com', created_at=datetime.now(timezone.utc) - timedelta(days=9),
-                 email_confirmed=True),
-            User(username='user8', password=bcrypt.generate_password_hash('1234').decode('utf-8'),
-                 email='user8@example.com', created_at=datetime.now(timezone.utc) - timedelta(days=12),
-                 email_confirmed=True),
-            User(username='user9', password=bcrypt.generate_password_hash('1234').decode('utf-8'),
-                 email='user9@example.com', created_at=datetime.now(timezone.utc) - timedelta(days=15),
-                 email_confirmed=True),
-            User(username='user10', password=bcrypt.generate_password_hash('1234').decode('utf-8'),
-                 email='user10@example.com', created_at=datetime.now(timezone.utc) - timedelta(days=20),
-                 email_confirmed=True),
+          User(username='Organisation_Owner', password=bcrypt.generate_password_hash('owner123').decode('utf-8'),
+               email='owner@example.com', is_owner=True, organisation_id=organisation.id,
+               email_confirmed=True, home_address = '48.205821, 16.383034'),
+          User(username='Agent_1', password=bcrypt.generate_password_hash('agent').decode('utf-8'),
+               email='agent1@example.com', created_at=datetime.now(timezone.utc) - timedelta(days=5),
+               email_confirmed=True, home_address = '48.205821, 16.383034'),
+          User(username='agent_2', password=bcrypt.generate_password_hash('agent').decode('utf-8'),
+               email='agent2@example.com', created_at=datetime.now(timezone.utc) - timedelta(days=10),
+               email_confirmed=True, home_address = '48.406391, 15.600153'),
+          User(username='manager_1', password=bcrypt.generate_password_hash('manager').decode('utf-8'),
+                 email='manager1@example.com', created_at=datetime.now(timezone.utc) - timedelta(days=3),
+                 email_confirmed=True, home_address = '48.205821, 16.383034'),
+          User(username='manager_2', password=bcrypt.generate_password_hash('manager').decode('utf-8'),
+                 email='manager2@example.com', created_at=datetime.now(timezone.utc) - timedelta(days=3),
+                 email_confirmed=True, home_address = '48.406391, 15.600153'),
+          User(username='user', password=bcrypt.generate_password_hash('1234').decode('utf-8'),
+               email='user@example.com', created_at=datetime.now(timezone.utc) - timedelta(days=7),
+               email_confirmed=False, home_address = '48.205821, 16.383034'),
+          User(username='user1', password=bcrypt.generate_password_hash('1234').decode('utf-8'),
+               email='user1@example.com', created_at=datetime.now(timezone.utc) - timedelta(days=2),
+               email_confirmed=True, home_address = '48.406391, 15.600153'),
+          User(username='user2', password=bcrypt.generate_password_hash('1234').decode('utf-8'),
+               email='user2@example.com', created_at=datetime.now(timezone.utc) - timedelta(days=4),
+               email_confirmed=True, home_address = '48.205821, 16.383034'),
+          User(username='user3', password=bcrypt.generate_password_hash('1234').decode('utf-8'),
+               email='user3@example.com', created_at=datetime.now(timezone.utc) - timedelta(days=6),
+               email_confirmed=True, home_address = '48.205821, 16.383034'),
+          User(username='user4', password=bcrypt.generate_password_hash('1234').decode('utf-8'),
+               email='user4@example.com', created_at=datetime.now(timezone.utc) - timedelta(days=8),
+               email_confirmed=True, home_address = '48.406391, 15.600153'),
+          User(username='user5', password=bcrypt.generate_password_hash('1234').decode('utf-8'),
+               email='user5@example.com', created_at=datetime.now(timezone.utc) - timedelta(days=9),
+               email_confirmed=True, home_address = '48.205821, 16.383034'),
+          User(username='user6', password=bcrypt.generate_password_hash('1234').decode('utf-8'),
+               email='user6@example.com', created_at=datetime.now(timezone.utc) - timedelta(days=12),
+               email_confirmed=True, home_address = '48.406391, 15.600153'),
+          User(username='user7', password=bcrypt.generate_password_hash('1234').decode('utf-8'),
+               email='user7@example.com', created_at=datetime.now(timezone.utc) - timedelta(days=15),
+               email_confirmed=True, home_address = '48.205821, 16.383034'),
+          User(username='user8', password=bcrypt.generate_password_hash('1234').decode('utf-8'),
+                 email='user8@example.com', created_at=datetime.now(timezone.utc) - timedelta(days=20),
+                 email_confirmed=True, home_address = '48.406391, 15.600153'),
         ]
 
         db.session.bulk_save_objects(users)
@@ -96,8 +101,11 @@ def initiate_db(app):
             username='admin',
             password=bcrypt.generate_password_hash('1').decode('utf-8'),
             email=os.getenv('ADMIN_EMAIL'),
-            email_confirmed=True
+            email_confirmed=True,
+            home_address = '48.406391, 15.600153',
+            organisation_id=afm.id
         )
+
         db.session.add(superadmin_user)
         db.session.commit()
 
@@ -109,16 +117,16 @@ def initiate_db(app):
 
         # Add reports without approver_id and is_approved
         reports = [
-            Report(location='48.2082,16.3738', description='Scary', photo_file='photo1.jpg', creator_id=2),
-            Report(location='47.8095,13.0550', description='Crazy', photo_file='photo2.jpg', creator_id=3),
-            Report(location='47.2692,11.4041', description='Holy shit', photo_file='photo3.jpg', creator_id=4),
-            Report(location='47.2260,13.3341', description='OMG', photo_file='photo4.jpg', creator_id=4),
+            Report(location='48.2082,16.3738', description='River flooded, many people need assistance', photo_file='photo1.jpg', creator_id=12),
+            Report(location='47.8095,13.0550', description='Crazy', photo_file='photo2.jpg', creator_id=7),
+            Report(location='47.2692,11.4041', description='Holy shit', photo_file='photo3.jpg', creator_id=10),
+            Report(location='47.2260,13.3341', description='OMG', photo_file='photo4.jpg', creator_id=8),
             Report(location='47.2228,13.2950', description='WOW', photo_file='photo5.jpg', creator_id=6),
             Report(location='47.3660,13.4560', description='I want to', photo_file='pic1.jpg', creator_id=7),
-            Report(location='47.2100,13.3750', description='No way', photo_file='photo7.jpg', creator_id=7),
-            Report(location='47.1600,13.4500', description='Impossible', photo_file='photo8.jpg', creator_id=4),
+            Report(location='47.2100,13.3750', description='No way', photo_file='photo7.jpg', creator_id=9),
+            Report(location='47.1600,13.4500', description='Impossible', photo_file='photo8.jpg', creator_id=8),
             Report(location='47.2200,13.4000', description='I can\'t believe my eyes', photo_file='photo9.jpg',
-                   creator_id=2),
+                   creator_id=11),
         ]
 
         db.session.bulk_save_objects(reports)
