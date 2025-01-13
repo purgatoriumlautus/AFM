@@ -134,7 +134,7 @@ def register_owner():
         username = request.form['username']
         password = request.form['password']
         email = request.form['email']
-
+        coordinates = request.form.get('coordinates')
         # Enforce password strength for owners as well
         if len(password) < 8 or not re.search(r'[A-Z]', password) or not re.search(r'[a-z]', password) or not re.search(
                 r'[0-9]', password) or not re.search(r'[!@#$%^&*(),.?":{}|<>]', password):
@@ -157,7 +157,7 @@ def register_owner():
         hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
 
         user = User(username=username, password=hashed_password, email=email, is_owner=True,
-                    email_confirmed=False)
+                    email_confirmed=False, home_address=coordinates)
         db.session.add(user)
         db.session.commit()
 

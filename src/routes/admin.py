@@ -72,7 +72,7 @@ def admin_dashboard():
         return redirect(url_for('main.mainpage'))
     # Generate invitation link
     invitation_link = url_for('main.join_organization', token=organisation.token, _external=True)
-    return render_template('admin_dashboard.html', users=users, invitation_link=invitation_link,is_super_admin=is_super_admin())
+    return render_template('admin_dashboard.html', users=users, invitation_link=invitation_link,is_super_admin=is_super_admin(), organisation = organisation)
 
 
 @admin.route('/create_organisation', methods=['GET', 'POST'])
