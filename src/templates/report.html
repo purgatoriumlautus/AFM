@@ -66,7 +66,18 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
-
+<script>
+ var home_address
+    {% if current_user.agent or current_user.manager and not current_user.is_super_admin%}
+    home_address = "{{ current_user.user.home_address }}"
+    {% else %}
+    home_address = "{{ current_user.home_address }}"
+    {% endif %}
+   const currentUser = {
+        id: "{{ current_user.uid }}",
+       location: home_address
+    };
+   </script>
 <script src = "{{ url_for('static', filename='scripts/create_report.js') }}"></script>
 
 </body>

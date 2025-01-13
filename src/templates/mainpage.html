@@ -46,8 +46,15 @@
 <script>
 
     var reports = [];
+    var home_address
+    {% if current_user.agent or current_user.manager and not current_user.is_super_admin%}
+    home_address = "{{ current_user.user.home_address }}"
+    {% else %}
+    home_address = "{{ current_user.home_address }}"
+    {% endif %}
    const currentUser = {
-        id: "{{ current_user.uid }}"
+        id: "{{ current_user.uid }}",
+       location: home_address
     };
     {% for report in reports %}
             var reportdet = {

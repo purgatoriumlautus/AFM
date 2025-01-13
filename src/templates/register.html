@@ -34,9 +34,8 @@
             <input type="email" id="email" name="email" class="form-control" placeholder="Enter your email" required>
         </div>
         <div class="mb-3">
-            <label for="address" class="form-label">Address</label>
-            <input type="text" id="address" name="address" class="form-control" placeholder="Enter your address">
-            <button type="button" id="findAddress" class="btn btn-secondary mt-2">Find Address</button>
+            <label for="street" class="form-label">Address</label>
+            <input type="text" id="street" name="street" class="form-control" placeholder="Enter your address">
         </div>
         <div class="mb-3">
             <label for="zipcode" class="form-label">Zip Code</label>
@@ -57,86 +56,122 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin="anonymous"></script>
 <script>
-    const map = L.map('map').setView([48.2082, 16.3738], 10);
-    const austriaBounds = [[46.3723, 9.5308], [49.0206, 17.1605]];
+   const austriaBounds = L.latLngBounds(
+    L.latLng(46.5, 9.5),
+    L.latLng(49.0, 17.0)
+);
 
-    map.fitBounds(austriaBounds);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-    }).addTo(map);
+var map = L.map('map', {
+    minZoom: 7,
+    maxZoom: 16,
+    maxBounds: austriaBounds,
+    maxBoundsViscosity: 1.0
+}).setView([47.5162, 14.5501], 7);
 
-    map.setMaxBounds(austriaBounds);
-    map.on('drag', function () {
-        map.panInsideBounds(austriaBounds, { animate: true });
-    });
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 
-    let marker;
+}).addTo(map);
 
-    function isWithinAustria(lat, lng) {
-        return (
-            lat >= austriaBounds[0][0] &&
-            lat <= austriaBounds[1][0] &&
-            lng >= austriaBounds[0][1] &&
-            lng <= austriaBounds[1][1]
-        );
+var marker = L.marker([47.5162, 14.5501]).addTo(map);
+
+function debounce(func, delay) {
+    let timeout;
+    return function (...args) {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(this, args), delay);
+    };
+}
+
+function geocodeAddress(street, zipcode, country, callback) {
+    const url = `https://nominatim.openstreetmap.org/search?street=${street}&postalcode=${zipcode}&country=${country}&countrycodes=AT&format=json&limit=1`;
+
+    fetch(url)
+        .then((response) => response.json())
+        .then((data) => {
+            if (data.length > 0) {
+                const lat = data[0].lat;
+                const lon = data[0].lon;
+                document.getElementById("coordinates").value = `${lat},${lon}`;
+                marker.setLatLng([lat, lon]);
+                map.setView([lat, lon], 13);
+
+                if (callback) callback();
+            } else {
+                alert("Location not found. Please check your input.");
+            }
+        })
+        .catch((error) => console.error("Error geocoding address:", error));
+}
+
+const updateMap = debounce(() => {
+    const street = document.getElementById("street").value;
+    const zipcode = document.getElementById("zipcode").value;
+    const country = "Austria";
+
+    if (street && zipcode) {
+        geocodeAddress(street, zipcode, country);
     }
+}, 800);
 
-    map.on('click', function (e) {
-        const { lat, lng } = e.latlng;
 
-        if (!isWithinAustria(lat, lng)) {
-            alert('The selected location is outside Austria. Please select a location within Austria.');
-            return;
-        }
+document.getElementById("street").addEventListener("input", updateMap);
+document.getElementById("zipcode").addEventListener("input", updateMap);
 
-        if (marker) {
-            marker.setLatLng([lat, lng]);
-        } else {
-            marker = L.marker([lat, lng]).addTo(map);
-        }
 
-        document.getElementById('coordinates').value = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
-    });
+document.getElementById("registerForm").addEventListener("submit", function (e) {
+    e.preventDefault();
 
-    document.getElementById('findAddress').addEventListener('click', function () {
-        const address = document.getElementById('address').value.trim();
-        const zipCode = document.getElementById('zipcode').value.trim();
+    const street = document.getElementById("street").value;
+    const zipcode = document.getElementById("zipcode").value;
+    const country = "Austria";
 
-        if (!address) {
-            alert('Please enter an address.');
-            return;
-        }
+    if (street && zipcode) {
+        geocodeAddress(street, zipcode, country, () => {
+            document.getElementById("registerForm").submit();
+        });
+    } else {
+        alert("Please fill in both street and zipcode.");
+    }
+});
 
-        const query = zipCode ? `${address}, ${zipCode}, Austria` : `${address}, Austria`;
+map.on('click', function(e) {
+    var lat = e.latlng.lat;
+    var lon = e.latlng.lng;
 
-        fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`)
-            .then(response => response.json())
-            .then(data => {
-                if (data.length === 0) {
-                    alert('Address not found. Please enter a valid address within Austria.');
-                    return;
-                }
+    if (austriaBounds.contains([lat, lon])) {
+        marker.setLatLng([lat, lon]);
+        document.getElementById("coordinates").value = `${lat},${lon}`;
 
-                const { lat, lon } = data[0];
+        // Reverse geocode the selected location to get street and zip code
+        reverseGeocode(lat, lon);
+    } else {
+        alert("Please select a location within Austria.");
+    }
+});
 
-                if (!isWithinAustria(parseFloat(lat), parseFloat(lon))) {
-                    alert('The searched address is outside Austria.');
-                    return;
-                }
+function reverseGeocode(lat, lon) {
+    const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`;
 
-                map.setView([lat, lon], 15);
-                if (marker) {
-                    marker.setLatLng([lat, lon]);
-                } else {
-                    marker = L.marker([lat, lon]).addTo(map);
-                }
+    fetch(url)
+        .then((response) => response.json())
+        .then((data) => {
+            if (data && data.address) {
+                const street = data.address.road || '';
+                const zipcode = data.address.postcode || '';
 
-                document.getElementById('coordinates').value = `${parseFloat(lat).toFixed(6)}, ${parseFloat(lon).toFixed(6)}`;
-            })
-            .catch(() => {
-                alert('Error fetching address location. Please try again later.');
-            });
-    });
+                // Update the input fields
+                document.getElementById("street").value = street;
+                document.getElementById("zipcode").value = zipcode;
+            } else {
+                alert("Could not retrieve address information for this location.");
+            }
+        })
+        .catch((error) => {
+            console.error("Error reverse geocoding location:", error);
+            alert("An error occurred while retrieving the address.");
+        });
+}
+
 </script>
 </body>
 </html>

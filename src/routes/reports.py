@@ -59,9 +59,7 @@ def view_reports():
         sort = request.args.get('sort', default="newest")
         min_distance = request.args.get('min_distance', type=float, default=0)
         max_distance = request.args.get('max_distance', type=float, default=float('inf'))
-        user_lat = request.args.get('latitude', type=float)
-        user_lon = request.args.get('longitude', type=float)
-
+        user_lat, user_lon = map(float, manager.user.home_address.split(','))
         if status != "all":
             query = query.filter(Report.status == status)
         if urgency != "all":

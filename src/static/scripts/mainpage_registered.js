@@ -94,7 +94,11 @@ function getUserLocation() {
 
 
             },
-            (error) => showError(error)
+            (error) => {
+                const [userLat, userLng] = currentUser.location.split(',').map(coord => parseFloat(coord.trim()));
+                const radius = 20;
+                showReports(userLat, userLng, radius, currentUser.id);
+            }
         );
     } else {
         alert("Geolocation is not supported by this browser.");
@@ -206,7 +210,14 @@ map.on('overlayadd', function(eventLayer) {
                     duration: 1
                 });
             },
-            (error) => showError(error)
+            (error) => {
+                    console.log(currentUser.location)
+                const [userLat, userLng] = currentUser.location.split(',').map(coord => parseFloat(coord.trim()));
+               map.flyTo([userLat, userLng], 11, {
+                    animate: true,
+                    duration: 1
+                });
+            }
         );
     }
 });

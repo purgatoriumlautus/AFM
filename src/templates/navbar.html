@@ -21,21 +21,12 @@
           <a class="nav-link r" href="{{ url_for('report.create_report') }}">Report</a>
         </li>
         {% endif %}
-    {% if current_user.is_authenticated and is_super_admin %}
-        <li class="nav-item active">
-          <a class="nav-link vr" href="{{ url_for('report.view_reports') }}">Reports</a>
-        </li>
-        {% endif %}
     {% if is_super_admin %}
                         <li class="nav-item active">
                             <a class="nav-link" href="{{ url_for('superadmin.superadmin_dashboard') }}">Superadmin</a>
                         </li>
                     {% endif %}
-         {% if current_user.is_authenticated %}
-        <li class="nav-item active">
-          <a class="nav-link p" href="{{ url_for('auth.profile', username=current_user.username) }}">Profile</a>
-        </li>
-        {% endif %}
+
            {% if current_user.is_authenticated and current_user.manager or current_user.agent%}
         <li class="nav-item active">
           <a class="nav-link d" href="{{ url_for('main.see_dashboard') }}">Dashboard</a>

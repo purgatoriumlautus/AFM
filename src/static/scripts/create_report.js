@@ -143,7 +143,16 @@ function toggleLocation() {
                         alert("Your current location is outside Austria.");
                     }
                 },
-                (error) => showError(error)
+                (error) => {
+                     console.log(currentUser.location)
+                    const [lat, lon] = currentUser.location.split(',').map(coord => parseFloat(coord.trim()));
+                     locationField.value = `${lat},${lon}`;
+                        marker.setLatLng([lat, lon]);
+                        map.setView([lat, lon], 13);
+                        reverseGeocode(lat, lon);
+
+                        locationField.readOnly = true;
+                }
             );
         } else {
             alert("Geolocation is not supported by this browser.");
