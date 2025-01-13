@@ -62,10 +62,14 @@ def register():
         username = request.form['username']
         password = request.form['password']
         email = request.form['email']
-
+        coordinates = request.form.get('coordinates')
         # Enforce password strength
-        if len(password) < 8 or not re.search(r'[A-Z]', password) or not re.search(r'[a-z]', password) or not re.search(r'[0-9]', password) or not re.search(r'[!@#$%^&*(),.?":{}|<>]', password):
-            flash('Password must be at least 8 characters long and include an uppercase letter, a lowercase letter, a digit, and a special character.', 'danger')
+        if len(password) < 8 or not re.search(r'[A-Z]', password) or not re.search(r'[a-z]', password) or not re.search(r'[0-9]', password) :
+            flash('Password must be at least 8 characters long and include an uppercase letter, a lowercase letter, a digit', 'danger')
+            return redirect(url_for('auth.register'))
+        
+        if not coordinates:
+            flash('Coordinates are required. Please select a location on the map or find the address', 'danger')
             return redirect(url_for('auth.register'))
 
         # Check if username or email already exists
@@ -80,7 +84,7 @@ def register():
             return redirect(url_for('auth.login'))
 
         hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
-        user = User(username=username, password=hashed_password, email=email)
+        user = User(username=username, password=hashed_password, email=email,home_address=coordinates)
         db.session.add(user)
         db.session.commit()
         verification_link = url_for('auth.verify_email', user_id=user.uid, _external=True)
@@ -95,7 +99,7 @@ def register():
                         <html>
                             <body>
                                 <h1">Verify Your Account</h1>
-                                <p>Thank you for signing up with <strong>AFM</strong>!</p>
+                                <p>Dear {username}, thank you for signing up with <strong>AFM</strong>!</p>
                                 <p>Please click the link below to verify your email address and activate your account:</p>
                                 <p><a href="{verification_link}" style="color:blue; font-weight:bold;">Verify My Account</a></p>
                                 <p><br>The AFM Team</p>
