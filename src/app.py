@@ -5,7 +5,7 @@ from flask import Flask
 from src.db import db
 from src.models import User
 from flask_migrate import Migrate
-from src.extensions import  bcrypt,login_manager,mail
+from src.extensions import  bcrypt,login_manager,mail, socketio
 from src.routes.auth import auth
 from src.routes.main import main
 from src.routes.reports import report
@@ -15,7 +15,6 @@ from src.routes.superadmin import superadmin
 from flask import current_app
 from flask_apscheduler import APScheduler
 from datetime import datetime, timedelta, timezone
-
 
 # Create the Flask app and initialize the scheduler
 def create_app():
@@ -79,4 +78,5 @@ def create_app():
     def load_user(user_id):
         return User.query.get(int(user_id))
 
+    socketio.init_app(app)
     return app

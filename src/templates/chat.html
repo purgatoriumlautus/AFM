@@ -6,6 +6,7 @@
     <title>Chat</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+     <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
 </head>
 <body style="background-color: #012041">
    {% include "navbar.html" %}
@@ -51,23 +52,70 @@
                 {% endfor %}
             </div>
             <div class="card-footer">
-                <form method="POST" class="d-flex" action="{{ url_for('main.chat', chat_id=chat.id) }}">
-                    <input type="text" name="message" class="form-control me-2" placeholder="Type a message...">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-send"></i>
-                    </button>
-                </form>
+             <form id="message-form" class="d-flex">
+    <input type="text" id="message" class="form-control me-2"  placeholder="Type your message...">
+    <button type="submit" class="btn btn-primary">Send</button>
+</form>
             </div>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // Scroll to the bottom of the chat when the page is loaded
+     <script>
         window.onload = function() {
-            var chatBody = document.getElementById('chat-body');
-            chatBody.scrollTop = chatBody.scrollHeight;
+            const socket = io.connect('http://' + document.domain + ':' + location.port);
+            const chatId = "{{ chat.id }}";
+            const username = "{{ current_user.username }}";
+            const userId = "{{ user }}";
+
+            socket.emit('join', { chat_id: chatId, username: username });
+
+            socket.on('receive_message', function(data) {
+                const messageElement = document.createElement('div');
+                messageElement.classList.add('d-flex', 'flex-column', 'gap-2');
+                if (data.username === username) {
+            messageElement.innerHTML = `
+<br>
+                <div class="d-flex align-items-end flex-row-reverse">
+                    <div class="rounded bg-primary text-white p-2">
+                        <p class="mb-0"><strong>${data.username}</strong><br>${data.message}</p>
+                      <small class="text-muted">${ data.created_at }</small>
+
+                    </div>
+                </div>`;
+        } else {
+            messageElement.innerHTML = `
+<br>
+                <div class="d-flex align-items-start">
+                    <div class="rounded bg-light p-2">
+                        <p class="mb-0"><strong>${data.username}</strong><br>${data.message}</p>
+                        <small class="text-muted">${ data.created_at }</small>
+                    </div>
+                </div>`;
         }
+
+                document.getElementById('chat-body').appendChild(messageElement);
+                var chatBody = document.getElementById('chat-body');
+                chatBody.scrollTop = chatBody.scrollHeight;
+            });
+
+            document.getElementById('message-form').addEventListener('submit', function(event) {
+                event.preventDefault();
+                const message = document.getElementById('message').value.trim();
+                if (message) {
+                    socket.emit('send_message', {
+                        chat_id: chatId,
+                        sender_id: userId,
+                        username: username,
+                        message: message
+                    });
+                    document.getElementById('message').value = '';
+                }
+            });
+        };
     </script>
+
+
+
 </body>
 </html>

@@ -120,7 +120,7 @@
     {% for report in reports %}
     <div class="report-card">
         <div class="report-info">
-            <img src="{{ url_for('static', filename=report.photo_file) if report.photo_file else 'https://via.placeholder.com/50' }}" alt="Report Image">
+            <img src="{{ url_for('static', filename=report.photo_file) if report.photo_file else  url_for('static', filename='no_image.jpg') }}" alt="Report Image">
             <div>
                 <p class="mb-0 text-truncate d-inline"><span class="text-muted">{{ report.location }}</span> <i style="color: green; font-size: large" class="bi bi-geo-alt-fill"></i></p>
                 <p class="mb-0 text-truncate">{{ report.description }}</p>

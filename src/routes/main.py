@@ -1,9 +1,11 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_user, logout_user,current_user, login_required
 from src.models import User,Report,Organisation, Manager, Agent, Chat, Message
-from src.extensions import bcrypt
+from src.extensions import bcrypt, socketio
+from flask_socketio import send, emit, join_room, leave_room
 from src.db import db
 import os
+from datetime import datetime
 
 main = Blueprint('main', __name__)
 
@@ -85,22 +87,14 @@ def see_dashboard():
     return redirect(url_for('main.mainpage'))
 
 
-@main.route('/chat/<int:chat_id>', methods=['GET', 'POST'])
+@main.route('/chat/<int:chat_id>')
 @login_required
 def chat(chat_id):
     chat = Chat.query.get_or_404(chat_id)
     report_id = chat.report_id
     report = Report.query.get_or_404(report_id)
 
-    if request.method == 'POST':
-        content = request.form.get('message')
-        if content:
-            new_message = Message(chat_id=chat.id, sender_id=current_user.uid, content=content)
-            db.session.add(new_message)
-            db.session.commit()
-            return redirect(url_for('main.chat', chat_id=chat.id))
-
-    messages = chat.messages
+    messages = chat.messages  # Fetch all messages associated with the chat
     manager = Manager.query.filter_by(user_id=current_user.uid).first()
     user = manager.user.uid if manager else current_user.uid
 
@@ -112,6 +106,31 @@ def chat(chat_id):
         user=user,
         current_user=current_user
     )
+
+@socketio.on('join')
+def handle_join(data):
+    room = f"chat_{data['chat_id']}"
+    join_room(room)
+    emit('status', {'msg': f"{data['username']} has joined the chat."}, to=room)
+
+@socketio.on('send_message')
+def handle_send_message(data):
+    flash(data)
+    room = f"chat_{data['chat_id']}"
+    message = data['message']
+    username = data['username']
+    created_at = datetime.utcnow().strftime('%H:%M %Y-%m-%d')
+    emit('receive_message', {
+        'username': username,
+        'message': message,
+        'created_at': created_at
+    }, to=room)
+    new_message = Message(chat_id=data['chat_id'], sender_id=data['sender_id'], content = message)
+    db.session.add(new_message)
+    db.session.commit()
+
+
+
 
 @main.route('/view_chat/<int:chat_id>', methods=['GET', 'POST'])
 @login_required
