@@ -215,8 +215,8 @@
     </div>
     <div class="mb-3">
         <label for="description" class="form-label">Describe task</label>
-          <textarea class="form-control" id="description" name="description" rows="3" maxlength="300" placeholder="Describe the task (max 300 characters)"> {{ task.task.description|trim}}</textarea>
-        <div id="charCount" class="form-text">0/300 characters</div>
+          <textarea class="form-control" id="description" name="description" rows="3" maxlength="1000" placeholder="Describe the task (max 1000 characters)"> {{ task.task.description|trim}}</textarea>
+        <div id="charCount" class="form-text">0/1000 characters</div>
     </div>
   <div class="mb-3">
     <label for="status" class="form-label">Task Status</label>

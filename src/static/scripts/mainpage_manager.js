@@ -35,16 +35,15 @@ var blueIcon = new L.Icon({
     popupAnchor: [1, -34],
     shadowSize: [41, 41]
 });
-function showReports(currentUser) {
+function showReports(userLat, userLng, radius, currentUser) {
     reports.forEach(function (report) {
         if (report.location) {
             const coords = report.location.split(',');
             const lat = parseFloat(coords[0]);
             const lng = parseFloat(coords[1]);
-
+             console.log(report.creator_id, currentUser);
             // Determine the marker icon based on report properties
             var markerIcon = blueIcon;
-            console.log(report.status);
             if (report.creator_id === currentUser) {
                 console.log(report.creator_id);
                 markerIcon = greenIcon;
@@ -87,6 +86,7 @@ function getUserLocation() {
             (error) => {
                 const [userLat, userLng] = currentUser.location.split(',').map(coord => parseFloat(coord.trim()));
                 const radius = 20;
+                console.log(currentUser.id)
                 showReports(userLat, userLng, radius, currentUser.id);
             }
         );

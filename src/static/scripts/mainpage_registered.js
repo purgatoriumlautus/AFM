@@ -57,16 +57,15 @@ function showReports(userLat, userLng, radius, currentUser) {
             console.log(distance)
             if (distance <= radius) {
                 var markerIcon = blueIcon;
-
                  if (report.creator_id === currentUser) {
                     console.log(report.creator_id)
                     markerIcon = greenIcon;
                 }
 
                 else if ( report.status === 'OPEN' || report.status ==='RESOLVED') {
-                    markerIcon = redIcon;
+                      markerIcon = blueIcon;
                 } else{
-                    markerIcon = blueIcon;
+                       markerIcon = redIcon;
                  }
 
 

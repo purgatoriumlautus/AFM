@@ -181,8 +181,6 @@ def score_report(report_id):
         if request.method == 'POST':
             data = request.get_json()  # Get the JSON data from the frontend
             score_value = data['score']
-
-            flash(current_user.uid, int(score_value))
             report.add_score(current_user.uid, int(score_value))  # Add the score
 
             return jsonify({

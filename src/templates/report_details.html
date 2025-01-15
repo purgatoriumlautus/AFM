@@ -101,7 +101,7 @@
             </form>
                 </div>
             </div>
-             {% elif not current_user.uid==report.creator_id and not report.is_approved and not current_user.manager and not current_user.agent%}
+             {% elif not current_user.uid==report.creator_id and report.status == "" and not current_user.manager and not current_user.agent and not current_user.is_owner%}
     <div style="text-align: center; width: 100%; margin-top: 10px">
     <div style="width: 50%; display: inline-block;">
         <input onchange="updateScore(this)" type="range" class="form-range customRange" value="1" min="1" max="100">
