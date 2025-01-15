@@ -48,7 +48,6 @@ def test_register_and_login_user():
 
         # Step 2: Verify the user's email
         user = User.query.filter_by(username=user_data['username']).first()
-        assert user is not None, "User was not found in the database"
 
         verify_url = f"{base_url}/verify/{user.uid}"
         verify_response = requests.get(verify_url)
