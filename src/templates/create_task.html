@@ -54,10 +54,9 @@
                     <option value="other">Other Organizations</option>
                 </select>
             </div>
-
+        
             <input type="text" id="agentSearch" class="form-control mb-2" placeholder="Search for agents..." style="border-radius: 5px;">
             <div id="agentList" class="list-group">
-
                 {% for agent in my_agents %}
                     <a href="#" class="list-group-item list-group-item-action" data-agent-id="{{ agent.id }}" data-agent-name="{{ agent.user.username }}" data-org="current" style="border-radius: 5px;">
                         <i class="bi bi-person-circle"></i> {{ agent.user.username }}
@@ -70,7 +69,9 @@
                     </a>
                 {% endfor %}
             </div>
+            <button id="addSelectedAgentsBtn" type="button" class="btn btn-primary mt-3 w-100">Add Selected Agents</button>
         </div>
+        
          <div id="selected" style="display: none;"></div>
         <button type="submit" class="btn btn-dark d-block mx-auto">Create Task</button>
     </form>
@@ -83,7 +84,7 @@
     const agentListContainer = document.getElementById("agentListContainer");
     const organizationSelect = document.getElementById("organizationSelect");
 
-
+    // Toggle the visibility of the agent list container
     addAgentBtn.addEventListener("click", function () {
         agentListContainer.style.display = agentListContainer.style.display === 'none' ? 'block' : 'none';
     });
@@ -91,6 +92,7 @@
     const agentSearchInput = document.getElementById('agentSearch');
     const agentList = document.getElementById('agentList');
 
+    // Search filter for agents
     agentSearchInput.addEventListener('input', function (e) {
         const filter = e.target.value.toLowerCase();
         const items = agentList.querySelectorAll('.list-group-item');
@@ -104,6 +106,7 @@
         });
     });
 
+    // Check if an agent is already selected
     function isAgentSelected(agentId) {
         const selectedAgents = document.querySelectorAll('#selectedAgents .badge');
         for (let agent of selectedAgents) {
@@ -114,76 +117,87 @@
         return false;
     }
 
+    // Add event listeners to all agent items
     document.querySelectorAll(".list-group-item").forEach(item => {
-    item.addEventListener("click", function (e) {
-        e.preventDefault();
-        const agentName = item.getAttribute("data-agent-name");
-        const agentId = item.getAttribute("data-agent-id");
-        const agentOrg = item.getAttribute("data-org");
+        item.addEventListener("click", function (e) {
+            e.preventDefault();
+            const agentName = item.getAttribute("data-agent-name");
+            const agentId = item.getAttribute("data-agent-id");
+            const agentOrg = item.getAttribute("data-org");
 
-        if (isAgentSelected(agentId)) {
-            alert("This agent has already been added.");
-            return;
-        }
+            if (isAgentSelected(agentId)) {
+                alert("This agent has already been added.");
+                return;
+            }
 
-        const agentDiv = document.createElement("div");
-        agentDiv.classList.add("badge", "m-1");
-        agentDiv.textContent = agentName;
-        agentDiv.dataset.agentId = agentId;
+            const agentDiv = document.createElement("div");
+            agentDiv.classList.add("badge", "m-1");
+            agentDiv.textContent = agentName;
+            agentDiv.dataset.agentId = agentId;
 
-        if (agentOrg === 'current') {
-            agentDiv.classList.add("bg-primary");
-        } else {
-            agentDiv.classList.add("bg-secondary");
-        }
-        agentDiv.addEventListener('click', function () {
-            agentDiv.remove();
-            removeAgentIdFromForm(agentId);
+            if (agentOrg === 'current') {
+                agentDiv.classList.add("bg-primary");
+            } else {
+                agentDiv.classList.add("bg-secondary");
+            }
+            agentDiv.addEventListener('click', function () {
+                agentDiv.remove();
+                removeAgentIdFromForm(agentId);
+            });
+            document.getElementById("selectedAgents").appendChild(agentDiv);
+            addAgentIdToForm(agentId);
+            agentListContainer.style.display = 'none';
         });
-        document.getElementById("selectedAgents").appendChild(agentDiv);
-        addAgentIdToForm(agentId);
-        agentListContainer.style.display = 'none';
     });
-});
 
-function addAgentIdToForm(agentId) {
-    const hiddenInput = document.createElement('input');
-    hiddenInput.type = 'hidden';
-    hiddenInput.name = 'agents';
-    hiddenInput.value = agentId;
-    console.log("Added")
-    document.getElementById("selected").appendChild(hiddenInput);
-}
+    // Add hidden input for selected agent
+    function addAgentIdToForm(agentId) {
+        const hiddenInput = document.createElement('input');
+        hiddenInput.type = 'hidden';
+        hiddenInput.name = 'agents';
+        hiddenInput.value = agentId;
+        document.getElementById("selected").appendChild(hiddenInput);
+    }
 
-function removeAgentIdFromForm(agentId) {
-    const inputs = document.querySelectorAll('#selected input[type="hidden"]');
-    inputs.forEach(input => {
-        if (input.value === agentId) {
-            input.remove();
-        }
-    });
-}
+    // Remove hidden input for deselected agent
+    function removeAgentIdFromForm(agentId) {
+        const inputs = document.querySelectorAll('#selected input[type="hidden"]');
+        inputs.forEach(input => {
+            if (input.value === agentId) {
+                input.remove();
+            }
+        });
+    }
 
+    // Filter agents based on the selected organization
     function filterAgents() {
         const selectedOrg = organizationSelect.value;
         const agents = document.querySelectorAll('.list-group-item');
         agents.forEach(agent => {
             const agentOrg = agent.getAttribute('data-org');
             if (selectedOrg === 'current' && agentOrg === 'current') {
-                agent.style.display = '';
+                agent.style.display = ''; // Show current organization agents
             } else if (selectedOrg === 'other' && agentOrg === 'other') {
-                agent.style.display = '';
-            } else {
-                agent.style.display = 'none';
+                agent.style.display = ''; // Show other organization agents
+            } else if (selectedOrg === 'current' || selectedOrg === 'other') {
+                agent.style.display = 'none'; // Hide agents not matching the selection
             }
         });
     }
 
+    // Update agent list when the organization select is changed
     organizationSelect.addEventListener('change', function () {
         filterAgents();
     });
+
+    // Initially show agents from the current organization
     filterAgents();
 </script>
+
+
+
+
+
 
 </body>
 </html>

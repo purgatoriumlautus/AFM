@@ -103,7 +103,7 @@ class Agent(db.Model):
     __tablename__ = 'agents'
 
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.uid'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.uid'), nullable=False, unique=True)
     position = db.Column(db.String(100), nullable=False, default="Agent")
 
     user = db.relationship('User', back_populates='agent')
@@ -117,7 +117,7 @@ class Manager(db.Model):
     __tablename__ = 'managers'
 
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.uid'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.uid'), nullable=False, unique=True)
     position = db.Column(db.String(100), nullable=False, default="Manager")
 
     user = db.relationship('User', back_populates='manager')

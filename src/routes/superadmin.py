@@ -128,21 +128,32 @@ def update_user():
         organisation = Organisation.query.get(organisation_id) if organisation_id else None
         user.organisation_id = organisation.id if organisation else None
 
+    
     # Update roles
+    
     if role is not None:
+        # Remove existing roles
         if user.agent:
             db.session.delete(user.agent)
         if user.manager:
             db.session.delete(user.manager)
 
-        if role == 'agent':
-            db.session.add(Agent(user_id=user.uid))
-        elif role == 'manager':
-            db.session.add(Manager(user_id=user.uid))
+        # Commit to persist the deletions before adding new roles
+        db.session.commit()
+        try:
+            # Add new role
+            if role == 'agent' and not user.agent:
+                db.session.add(Agent(user_id=user.uid))
+            elif role == 'manager' and not user.manager:
+                db.session.add(Manager(user_id=user.uid))
+        except:
+            pass
 
     db.session.commit()
-    flash("User updated successfully.", "success")
+
     return jsonify({"success": True, "message": "User updated successfully"})
+
+
 
 
 

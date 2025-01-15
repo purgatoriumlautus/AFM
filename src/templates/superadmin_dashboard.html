@@ -235,7 +235,7 @@
 
         // Attach listeners initially
         
-        
+        attachBanUnbanListeners();
  
 
         // Auto-submit form for organization and role changes
@@ -244,15 +244,20 @@
         // Attach listeners initially
 
         document.querySelectorAll('.role-select, .org-select, .owner-select').forEach((dropdown) => {
+            let isSubmitting = false; // Prevent duplicate submissions
+        
             dropdown.addEventListener('change', function () {
+                if (isSubmitting) return; // Exit if a submission is already in progress
+                isSubmitting = true; // Set the flag to prevent further submissions
+        
                 const form = this.closest('form'); // Get the closest form element
                 const formData = new FormData(form); // Prepare form data
                 const actionURL = form.action; // Get the form's action URL
                 const method = form.method; // Get the form's method
-
+        
                 const isOwner = this.value === "true"; // Check if the value is "true"
                 const userHasOrg = form.querySelector('input[name="user_id"]').dataset.hasOrg;
-                
+        
                 if (!isOwner && userHasOrg === "true") {
                     // Show confirmation modal
                     const modal = document.getElementById('confirmRevokeModal');
@@ -262,38 +267,16 @@
         
                     confirmButton.onclick = function () {
                         modal.style.display = 'none'; // Close the modal
-                        submitForm(form); // Submit the form
+                        submitForm(form, () => isSubmitting = false); // Submit the form and reset flag
                     };
         
                     return; // Prevent default submission
                 }
         
-                submitForm(form); // Submit form for non-critical changes
-                fetch(actionURL, {
-                    method: method,
-                    body: formData
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        // If the response is not OK, throw an error
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    return response.json(); // Parse the JSON response
-                })
-                .then(data => {
-                    if (data.success) {
-                        window.location.reload(); // Reload the page to reflect changes
-                    } else {
-                        alert("Error: " + data.message); // Show error message
-                    }
-                })
-                .catch(error => {
-                    console.error("Error:", error);
-                    alert("An error occurred. Please try again.");
-                });
+                submitForm(form, () => isSubmitting = false); // Submit form for non-critical changes
             });
         });
-        attachBanUnbanListeners();
+        
         
         
         
@@ -347,8 +330,12 @@
                 
             });
         });
-        
-        function submitForm(form) {
+        document.querySelectorAll('form').forEach(form => {
+            form.addEventListener('submit', () => {
+                form.querySelector('button[type="submit"]').disabled = true;
+            });
+        });
+        function submitForm(form, callback) {
             const formData = new FormData(form); // Prepare form data
             const actionURL = form.action; // Get the form's action URL
         
@@ -372,6 +359,9 @@
             .catch(error => {
                 console.error("Error:", error);
                 alert("An error occurred. Please try again.");
+            })
+            .finally(() => {
+                if (callback) callback(); // Reset the submission flag
             });
         }
     </script>

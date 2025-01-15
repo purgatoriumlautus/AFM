@@ -4,9 +4,14 @@ from src.db import db
 from src.models import Manager, Task, Report, Agent, TaskRequest, agent_task, User, Organisation
 from sqlalchemy.orm import joinedload
 from geopy.geocoders import Nominatim
+import os
+
 task = Blueprint('task', __name__)
 
 
+def is_super_admin():
+    super_admin_mail = os.getenv("ADMIN_EMAIL")
+    return super_admin_mail == current_user.email
 
 #to be done
 @task.route('/create_task/<int:report_id>', methods=['GET', 'POST'])
@@ -82,7 +87,7 @@ def create_task(report_id):
             flash("Task created successfully!", "success")
 
         return render_template('create_task.html', report=report, my_agents=in_org, other_agents=not_org,
-                               current_organisation_id=current_organisation_id, location=address)
+                               current_organisation_id=current_organisation_id, location=address,is_super_admin=is_super_admin())
     flash("You are not authorized to view this page.", "danger")
     return redirect(url_for('main.mainpage'))
 
@@ -144,7 +149,7 @@ def view_tasks():
             my_agents=in_org,
             other_agents=not_org,
             status=status,
-            sort=sort
+            sort=sort,is_super_admin=is_super_admin()
         )
     else:
         flash("You are not authorized to view this page.", "danger")
@@ -250,7 +255,7 @@ def agent_view_tasks():
         })
 
     return render_template('agent_view_tasks.html', tasks_with_related=tasks_with_related,
-                           status=status_filter, sort=sort_filter)
+                           status=status_filter, sort=sort_filter,is_super_admin=is_super_admin())
 
 
 @task.route('/tasks/change_status/<int:task_id>', methods=['POST'])
@@ -304,7 +309,7 @@ def change_status(task_id):
                 'related_tasks': related_tasks
             })
         return render_template('agent_view_tasks.html', tasks_with_related=tasks_with_related,
-                               status=status_filter, sort=sort_filter)
+                               status=status_filter, sort=sort_filter,is_super_admin=is_super_admin())
 
     flash("You are not authorized to view this page.", "danger")
     return redirect(url_for('main.mainpage'))
@@ -344,7 +349,7 @@ def related_tasks(task_id):
             related_agents=related_agents,
             status=status_filter,
             sort=sort_filter,
-            task=task
+            task=task,is_super_admin=is_super_admin()
         )
 
     flash("You are not authorized to view this page.", "danger")
@@ -374,7 +379,7 @@ def manage_requests():
             query = query.order_by(TaskRequest.created_at.asc())
         requests = query.all()
         organisations = Organisation.query.all()
-        return render_template('manage_requests.html', requests=requests, organisations=organisations, organisation=organisation_id)
+        return render_template('manage_requests.html', requests=requests, organisations=organisations, organisation=organisation_id,is_super_admin=is_super_admin())
     flash("You are not authorized to view this page.", "danger")
     return redirect(url_for('main.mainpage'))
 
