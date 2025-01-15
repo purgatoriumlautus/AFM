@@ -56,7 +56,7 @@ function showReports(currentUser) {
 
             }
 
-            // Create a marker and bind a popup with report details
+
             const marker = L.marker([lat, lng], { icon: markerIcon });
 
             marker.bindPopup(`
@@ -70,18 +70,21 @@ function showReports(currentUser) {
     });
 }
 markers.addTo(map)
-showReports(currentUser.id);
+let locationInitialized = false;
 
 function getUserLocation() {
+    if (locationInitialized) return;
+    locationInitialized = true;
+
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
             (position) => {
                 const userLat = position.coords.latitude;
                 const userLng = position.coords.longitude;
                 const radius = 20;
-
-
-            },(error) => {
+                showReports(userLat, userLng, radius, currentUser.id);
+            },
+            (error) => {
                 const [userLat, userLng] = currentUser.location.split(',').map(coord => parseFloat(coord.trim()));
                 const radius = 20;
                 showReports(userLat, userLng, radius, currentUser.id);
