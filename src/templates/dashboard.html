@@ -128,9 +128,10 @@
         const markers = L.markerClusterGroup();
         const tasks = {{ tasks|tojson }};
         const statusColors = {
-            'In Process': 'orange',
-            'Not Started': 'red',
-            'Done': 'green'
+            'OPEN': 'orange',
+            '': 'red',
+            'RESOLVED': 'green',
+            'REQUIRES_CLARIFICATION':'blue'
         };
 
         tasks.forEach(function(task) {
@@ -162,7 +163,8 @@
                 <strong>Task Status Legend</strong><br>
                 <div><span class="color-box" style="background-color: red;"></span> Not Started</div>
                 <div><span class="color-box" style="background-color: orange;"></span> In Process</div>
-                <div><span class="color-box" style="background-color: green;"></span> Done</div>
+                <div><span class="color-box" style="background-color: green;"></span>Resolved</div>
+<div><span class="color-box" style="background-color: blue;"></span>Needs clarification</div>
             `;
             return div;
         };
