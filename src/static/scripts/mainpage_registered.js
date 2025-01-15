@@ -83,7 +83,10 @@ function showReports(userLat, userLng, radius, currentUser) {
         }
     });
 } markers.addTo(map)
+let locationInitialized = false;
 function getUserLocation() {
+      if (locationInitialized) return;
+    locationInitialized = true;
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
             (position) => {
