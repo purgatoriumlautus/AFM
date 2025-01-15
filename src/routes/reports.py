@@ -181,12 +181,14 @@ def score_report(report_id):
         if request.method == 'POST':
             data = request.get_json()  # Get the JSON data from the frontend
             score_value = data['score']
-            if not report.is_approved:
-                report.add_score(current_user.uid, int(score_value))  # Add the score
-                return jsonify({
-                    'message': 'Score updated successfully',
-                    'urgency': urgency  # Send back the updated score
-                }), 200
+
+            flash(current_user.uid, int(score_value))
+            report.add_score(current_user.uid, int(score_value))  # Add the score
+
+            return jsonify({
+                'message': 'Score updated successfully',
+                'urgency': urgency  # Send back the updated score
+            }), 200
 
         else:
             return render_template('report_details.html',
