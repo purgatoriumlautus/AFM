@@ -243,7 +243,7 @@ class Task(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
-    description = db.Column(db.String(1000), nullable=True)  # Add description column
+    description = db.Column(db.String(300), nullable=True)  # Add description column
     creator_id = db.Column(db.Integer, db.ForeignKey('managers.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     status = db.Column(db.String(50), default="OPEN", nullable=False)
