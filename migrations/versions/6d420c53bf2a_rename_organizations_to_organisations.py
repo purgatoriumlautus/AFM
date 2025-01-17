@@ -53,11 +53,6 @@ def upgrade():
 
 
 def downgrade():
-    # Drop foreign key constraint in 'users'
-    with op.batch_alter_table('users', schema=None) as batch_op:
-        batch_op.drop_constraint('fk_user_organisation_id', type_='foreignkey')
-        batch_op.drop_constraint('unique_owner_organisation', type_='unique')
-
     # Nullify or update the 'organisation_id' column in 'users' to prevent violations
     op.execute('UPDATE users SET organisation_id = NULL')
 
@@ -85,4 +80,3 @@ def downgrade():
             ['id'],
             ondelete='SET NULL'
         )
-        batch_op.create_unique_constraint('unique_owner_organisation', ['organisation_id', 'is_owner'])
